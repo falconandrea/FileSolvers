@@ -21,7 +21,7 @@ const Header = () => {
         title="Home"
         className="text-2xl pointer text-center font-semibold"
       >
-        FileSolver
+        FileSolvers
       </Link>
       <div className="flex items-center space-x-4">
         <ConnectButton />

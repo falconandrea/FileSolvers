@@ -18,7 +18,7 @@ const Layout = ({ children }: LayoutProps) => {
     <>
       <Providers>
         <Head>
-          <title>FileSolver</title>
+          <title>FileSolvers</title>
           <meta
             content="FileSolvers is a decentralized platform designed to simplify the process of requesting and accessing specific files within the Filecoin Network."
             name="description"
