@@ -23,8 +23,16 @@ const Header = () => {
       >
         FileSolvers
       </Link>
-      <div className="flex items-center space-x-4">
+      <div className="flex flex-row-reverse items-center">
         <ConnectButton />
+        {isConnected && (
+          <Link href="/my" className="text-gray-800 hover:underline mr-4">
+            Your Requests
+          </Link>
+        )}
+        <Link href="/requests" className="text-gray-800 hover:underline mr-4">
+          All Requests
+        </Link>
       </div>
     </header>
   );

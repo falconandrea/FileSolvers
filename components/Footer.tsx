@@ -5,7 +5,7 @@
  */
 const Footer = () => {
   return (
-    <footer className="text-center p-4 bg-orange-400">
+    <footer className="text-center p-4">
       <p>
         &copy; 2023 FileSolver - Created by{" "}
         <a
