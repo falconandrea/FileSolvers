@@ -1,53 +1,24 @@
+"use client";
+
+import type { AppProps } from "next/app";
+import { ReactElement, ReactNode } from "react";
+import { NextPage } from "next";
+
 import "../styles/globals.css";
 import "@rainbow-me/rainbowkit/styles.css";
-import { getDefaultWallets, RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import type { AppProps } from "next/app";
-import { configureChains, createConfig, WagmiConfig } from "wagmi";
-import {
-  arbitrum,
-  goerli,
-  mainnet,
-  optimism,
-  polygon,
-  base,
-  zora,
-} from "wagmi/chains";
-import { publicProvider } from "wagmi/providers/public";
 
-const { chains, publicClient, webSocketPublicClient } = configureChains(
-  [
-    mainnet,
-    polygon,
-    optimism,
-    arbitrum,
-    base,
-    zora,
-    ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === "true" ? [goerli] : []),
-  ],
-  [publicProvider()]
-);
+export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
+  getLayout?: (page: ReactElement) => ReactNode;
+};
 
-const { connectors } = getDefaultWallets({
-  appName: process.env.NEXT_PUBLIC_PROKECT_NAME as string,
-  projectId: process.env.NEXT_PUBLIC_PROJECT_ID as string,
-  chains,
-});
+type AppPropsWithLayout = AppProps & {
+  Component: NextPageWithLayout;
+};
 
-const wagmiConfig = createConfig({
-  autoConnect: true,
-  connectors,
-  publicClient,
-  webSocketPublicClient,
-});
+function MyApp({ Component, pageProps }: AppPropsWithLayout) {
+  const getLayout = Component.getLayout ?? ((page) => page);
 
-function MyApp({ Component, pageProps }: AppProps) {
-  return (
-    <WagmiConfig config={wagmiConfig}>
-      <RainbowKitProvider chains={chains}>
-        <Component {...pageProps} />
-      </RainbowKitProvider>
-    </WagmiConfig>
-  );
+  return getLayout(<Component {...pageProps} />);
 }
 
 export default MyApp;
