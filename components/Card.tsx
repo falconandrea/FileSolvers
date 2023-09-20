@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CardProps } from "../utils/interfaces-types";
-import { formatTimestamp, returnETH } from "../utils/functions";
+import { formatTimestamp, returnETH } from "../utils/helpers";
 
 /**
  * Renders a card component for a given demand.

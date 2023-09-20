@@ -80,15 +80,6 @@ contract FileSolvers {
     }
 
     /**
-     * Return the request required
-     * @param id - id of the request
-     */
-    function getRequest(uint id) external view returns (Request memory) {
-        if (id >= countRequests) revert RequestNotFound();
-        return requests[id];
-    }
-
-    /**
      * Internal function to check the format is accepted
      * @param id - id of the request
      * @param formatToCheck - format to check
@@ -147,5 +138,25 @@ contract FileSolvers {
         requestFiles[id].push(countFiles);
         requests[id].filesCount++;
         countFiles++;
+    }
+
+    /**
+     * Return the request required
+     * @param id - id of the request
+     */
+    function getRequest(uint id) external view returns (Request memory) {
+        if (id >= countRequests) revert RequestNotFound();
+        return requests[id];
+    }
+
+    /**
+     * Return all the requests
+     */
+    function getRequests() external view returns (Request[] memory) {
+        Request[] memory result = new Request[](countRequests);
+        for (uint i = 0; i < countRequests; i++) {
+            result[i] = requests[i];
+        }
+        return result;
     }
 }

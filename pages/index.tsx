@@ -1,27 +1,35 @@
-import { ReactElement } from "react";
+import { ReactElement, useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import { NextPageWithLayout } from "./_app";
 import Card from "../components/Card";
+import { Demand } from "../utils/interfaces-types";
+import LoadingSpinner from "../components/LoadingSpinner";
+import { getDemands } from "../utils/functions";
 
 const Home: NextPageWithLayout = () => {
-  const latestRequests = [
-    {
-      id: 1n,
-      author: "0x00000",
-      winner: null,
-      description: "Simple test",
-      formatsAccepted: ["pdf", "txt"],
-      reward: 1000000000000000000,
-      isDone: false,
-      creationDate: new Date().getTime(),
-      expirationDate: new Date().getTime() + 2000,
-      filesCount: 0,
-      winnerFile: 0,
-    },
-  ];
+  const [demands, setDemands] = useState<Demand[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setIsLoading(true);
+
+    /**
+     * Fetches data asynchronously.
+     *
+     * @return {Promise<void>} Promise that resolves when data is fetched.
+     */
+    const fetchData = async () => {
+      const result: Demand[] = await getDemands("DESC", false, 3);
+      setDemands(result);
+      setIsLoading(false);
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <main className="container mx-auto">
+      {isLoading && <LoadingSpinner />}
       <div className="p-4">
         <h1 className="text-3xl font-semibold text-center mb-4 mt-4">
           FileSolvers
@@ -33,7 +41,7 @@ const Home: NextPageWithLayout = () => {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {latestRequests.map((demand, index) => (
+          {demands.map((demand, index) => (
             <Card key={index} demand={demand} />
           ))}
         </div>
