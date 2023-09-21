@@ -17,6 +17,18 @@ export const formatTimestamp = (timestamp: bigint): string => {
 };
 
 /**
+ * Convert a date string in the format "yyyy-mm-dd" to a timestamp.
+ *
+ * @param {string} dateString - The date string to convert.
+ * @return {number} The timestamp representing the input date.
+ */
+export const getTimestampFromDate = (dateString: string): number => {
+  const [year, month, day] = dateString.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.getTime();
+};
+
+/**
  * Format a bigint into a string representing an ETH amount.
  *
  * @param amount - The amount to format.
@@ -24,4 +36,21 @@ export const formatTimestamp = (timestamp: bigint): string => {
  */
 export const returnETH = (amount: bigint): string => {
   return `${formatEther(amount)} ETH`;
+};
+
+/**
+ * Parses error messages and returns a corresponding error message.
+ *
+ * @param {string} err - The error message to parse.
+ * @return {string} The corresponding error message.
+ */
+export const parseErrors = (err: string) => {
+  console.log(err);
+  if (err.includes("MissingParams")) {
+    return "Missing params";
+  } else if (err.includes("WrongExpirationDate")) {
+    return "Wrong or expired expiration date";
+  } else {
+    return "Error during transaction";
+  }
 };

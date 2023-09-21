@@ -1,10 +1,13 @@
+"use client";
+
 import { ReactElement, useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import { NextPageWithLayout } from "./_app";
 import Card from "../components/Card";
 import { Demand } from "../utils/interfaces-types";
 import LoadingSpinner from "../components/LoadingSpinner";
-import { getDemands } from "../utils/functions";
+import { getRequests } from "../utils/functions";
+import Link from "next/link";
 
 const Home: NextPageWithLayout = () => {
   const [demands, setDemands] = useState<Demand[]>([]);
@@ -13,14 +16,10 @@ const Home: NextPageWithLayout = () => {
   useEffect(() => {
     setIsLoading(true);
 
-    /**
-     * Fetches data asynchronously.
-     *
-     * @return {Promise<void>} Promise that resolves when data is fetched.
-     */
     const fetchData = async () => {
-      const result: Demand[] = await getDemands("DESC", false, 3);
-      setDemands(result);
+      const data = await getRequests("DESC", false, 3);
+      setDemands(data);
+      console.log(data);
       setIsLoading(false);
     };
 
@@ -34,16 +33,42 @@ const Home: NextPageWithLayout = () => {
         <h1 className="text-3xl font-semibold text-center mb-4 mt-4">
           FileSolvers
         </h1>
-        <p className="text-center text-gray-600 mb-8">
+        <p className="text-center text-gray-600 mb-8 max-w-xl mx-auto">
           FileSolvers is a decentralized platform designed to simplify the
           process of requesting and accessing specific files within the Filecoin
           Network.
+          <span className="hidden md:inline-block">
+            <br />
+            Our goal is to connect users seeking particular files with providers
+            who can fulfill those requests in a seamless and secure manner.
+          </span>
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {demands.map((demand, index) => (
-            <Card key={index} demand={demand} />
-          ))}
+        <div className="bg-slate-100 p-4 border rounded py-8">
+          {demands.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {demands.map((demand, index) => (
+                <Card key={index} demand={demand} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-600">
+              No active requests at the moment
+            </p>
+          )}
+        </div>
+
+        <div className="text-center mt-16 mb-8">
+          <h4 className="font-semibold text-xl">
+            Need a File? Create a Request!
+          </h4>
+          <Link
+            href="/create"
+            title="Crete a new request"
+            className="bg-slate-400 inline-block hover:bg-slate-600 text-white px-4 py-2 rounded mt-4"
+          >
+            Create a Request
+          </Link>
         </div>
       </div>
     </main>
