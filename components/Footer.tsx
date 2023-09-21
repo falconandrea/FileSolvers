@@ -5,9 +5,9 @@
  */
 const Footer = () => {
   return (
-    <footer className="text-center p-4">
+    <footer className="text-center bg-slate-600 text-white p-4 mt-8">
       <p>
-        &copy; 2023 FileSolver - Created by{" "}
+        &copy; 2023 FileSolvers - Created by{" "}
         <a
           className="underline font-bold"
           href="https://linktr.ee/falconandrea"

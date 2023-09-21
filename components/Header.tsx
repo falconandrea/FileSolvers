@@ -25,13 +25,19 @@ const Header = () => {
       </Link>
       <div className="flex flex-row-reverse items-center">
         <ConnectButton />
-        {isConnected && (
-          <Link href="/my" className="text-gray-800 hover:underline mr-4">
-            Your Requests
-          </Link>
-        )}
-        <Link href="/requests" className="text-gray-800 hover:underline mr-4">
-          All Requests
+        <Link
+          href="/my"
+          title="My requests"
+          className="text-gray-800 hover:underline mr-8"
+        >
+          Yours
+        </Link>
+        <Link
+          href="/requests"
+          title="All the requests"
+          className="text-gray-800 hover:underline mr-8"
+        >
+          All
         </Link>
       </div>
     </header>
