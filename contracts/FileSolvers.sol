@@ -159,4 +159,28 @@ contract FileSolvers {
         }
         return result;
     }
+
+    /**
+     * Return all my requests
+     */
+    function getMyRequests() external view returns (Request[] memory) {
+        // Count how many requests I have
+        uint myRequests = 0;
+        for (uint i = 0; i < countRequests; i++) {
+            if (msg.sender == requests[i].author) {
+                myRequests++;
+            }
+        }
+
+        // Return my requests
+        Request[] memory result = new Request[](myRequests);
+        uint j = 0;
+        for (uint i = 0; i < countRequests; i++) {
+            if (msg.sender == requests[i].author) {
+                result[j] = requests[i];
+                j++;
+            }
+        }
+        return result;
+    }
 }

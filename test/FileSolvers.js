@@ -21,7 +21,7 @@ describe("FileSolvers", function () {
         "Simple description",
         ["pdf", "doc", "docx"],
         hre.ethers.parseEther("0.1"),
-        Math.floor(Date.now() / 1000)
+        Math.floor(Date.now() / 1000) + 2000
       );
 
     // Get request
@@ -30,7 +30,7 @@ describe("FileSolvers", function () {
     return request;
   }
 
-  describe("Tests", function () {
+  describe("Deploy", function () {
     it("Should deploy", async function () {
       const { contract } = await loadFixture(deployFixture);
       expect(contract.target).to.be.a("string");
@@ -50,7 +50,7 @@ describe("FileSolvers", function () {
           "Simple description",
           ["pdf", "doc", "docx"],
           hre.ethers.parseEther("0.1"),
-          Math.floor(Date.now() / 1000)
+          Math.floor(Date.now() / 1000) + 2000
         );
 
       // Check tx is not reverted
@@ -73,7 +73,7 @@ describe("FileSolvers", function () {
             "",
             ["pdf", "doc", "docx"],
             hre.ethers.parseEther("0.1"),
-            Math.floor(Date.now() / 1000)
+            Math.floor(Date.now() / 1000) + 2000
           )
       ).to.be.revertedWithCustomError(contract, "MissingParams");
 
@@ -85,7 +85,7 @@ describe("FileSolvers", function () {
             "Simple description",
             ["pdf", "doc", "docx"],
             hre.ethers.parseEther("0"),
-            Math.floor(Date.now() / 1000)
+            Math.floor(Date.now() / 1000) + 2000
           )
       ).to.be.revertedWithCustomError(contract, "MissingParams");
 
@@ -107,7 +107,7 @@ describe("FileSolvers", function () {
             "Simple description",
             [],
             hre.ethers.parseEther("0.2"),
-            Math.floor(Date.now() / 1000)
+            Math.floor(Date.now() / 1000) + 2000
           )
       ).to.be.revertedWithCustomError(contract, "MissingParams");
 
@@ -186,6 +186,48 @@ describe("FileSolvers", function () {
             "abc123"
           )
       ).to.be.revertedWithCustomError(contract, "WrongFormat");
+    });
+  });
+
+  describe("Get requests", function () {
+    it("Should get all requests", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // Create new request
+      const request = await createSimpleRequest(contract, owner);
+      const request2 = await createSimpleRequest(contract, account1);
+
+      const requests = await contract.getRequests();
+      expect(requests.length).to.be.equal(2);
+    });
+
+    it("Should get only mine requests", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // Create new request
+      const request = await createSimpleRequest(contract, owner);
+      const request2 = await createSimpleRequest(contract, account1);
+
+      const requests = await contract.connect(owner).getMyRequests();
+      expect(requests.length).to.be.equal(1);
+    });
+
+    it("Shouldn't get not exists request", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // Create new request
+      const request = await createSimpleRequest(contract, owner);
+
+      await expect(contract.getRequest(1)).to.be.revertedWithCustomError(
+        contract,
+        "RequestNotFound"
+      );
     });
   });
 });
