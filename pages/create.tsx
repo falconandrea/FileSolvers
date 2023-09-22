@@ -4,17 +4,22 @@ import { ReactElement, useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import { NextPageWithLayout } from "./_app";
 import LoadingSpinner from "../components/LoadingSpinner";
-import { useAccount } from "wagmi";
+import { useAccount, useNetwork } from "wagmi";
 import { createRequest } from "../utils/functions";
 import { parseErrors } from "../utils/helpers";
+import TransactionLink from "../components/TransactionLink";
+import MessageAlert from "../components/MessageAlert";
 
 const Create: NextPageWithLayout = () => {
   const { isConnected, address } = useAccount();
+  const { chain } = useNetwork();
   const [showForm, setShowForm] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hash, setHash] = useState<string>("");
   const [messageAlert, setMessageAlert] = useState<string>("");
-  const [messageStatus, setMessageStatus] = useState<string>("");
+  const [messageStatus, setMessageStatus] = useState<"success" | "error">(
+    "success"
+  );
 
   // Format fields
   const [description, setDescription] = useState<string>("");
@@ -25,11 +30,20 @@ const Create: NextPageWithLayout = () => {
   );
 
   useEffect(() => {
-    setShowForm(isConnected);
-  }, [isConnected, address]);
+    setShowForm(isConnected && chain && chain.name == "Sepolia" ? true : false);
+  }, [isConnected, address, chain]);
 
-  const handleSubmit = async (e: any) => {
+  /**
+   * Handles the form submission asynchronously.
+   *
+   * @param {React.FormEvent} e - The form event object.
+   * @return {Promise<void>} - A promise that resolves once the form submission is handled.
+   */
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setMessageAlert("");
+    setMessageStatus("success");
+    setIsLoading(true);
 
     console.log({
       description,
@@ -59,11 +73,14 @@ const Create: NextPageWithLayout = () => {
       setMessageStatus("error");
       setMessageAlert(parseErrors(error.toString()));
     }
+
+    setIsLoading(false);
   };
 
   return (
     <main className="container mx-auto">
       {isLoading && <LoadingSpinner />}
+      <MessageAlert message={messageAlert} messageStatus={messageStatus} />
       {showForm ? (
         <div className="py-16 px-4 max-w-xl mx-auto">
           <div className="bg-slate-100 p-4 border rounded">
@@ -150,9 +167,7 @@ const Create: NextPageWithLayout = () => {
                 Send request
               </button>
             </form>
-            {messageAlert}
-            {messageStatus}
-            {hash}
+            <TransactionLink hash={hash} />
           </div>
         </div>
       ) : (

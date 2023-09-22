@@ -25,7 +25,7 @@ export const formatTimestamp = (timestamp: bigint): string => {
 export const getTimestampFromDate = (dateString: string): number => {
   const [year, month, day] = dateString.split("-").map(Number);
   const date = new Date(year, month - 1, day);
-  return date.getTime();
+  return Math.floor(date.getTime() / 1000);
 };
 
 /**
