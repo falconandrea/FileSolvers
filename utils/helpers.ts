@@ -29,6 +29,17 @@ export const getTimestampFromDate = (dateString: string): number => {
 };
 
 /**
+ * Truncates a string if it exceeds a specified length and adds an ellipsis at the end.
+ *
+ * @param {string} str - The string to truncate.
+ * @param {number} n - The maximum length of the truncated string.
+ * @return {string} The truncated string with an ellipsis added if necessary.
+ */
+export const truncateString = (str: string, n: number): string => {
+  return str.length > n ? str.slice(0, n - 1) + "..." : str;
+};
+
+/**
  * Format a bigint into a string representing an ETH amount.
  *
  * @param amount - The amount to format.
