@@ -45,13 +45,6 @@ const Create: NextPageWithLayout = () => {
     setMessageStatus("success");
     setIsLoading(true);
 
-    console.log({
-      description,
-      formats,
-      reward,
-      expirationDate,
-    });
-
     try {
       const { result, hash } = await createRequest(
         description,
@@ -61,7 +54,6 @@ const Create: NextPageWithLayout = () => {
       );
       setHash(hash);
 
-      console.log(result);
       setMessageAlert("Transaction sent");
 
       // Reset form
