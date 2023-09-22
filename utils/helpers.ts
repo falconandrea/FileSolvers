@@ -1,4 +1,5 @@
 import { formatEther } from "viem";
+import { acceptedFormats, mappingFormats } from "./mapping";
 
 /**
  * Format a timestamp into a human-readable date string.
@@ -63,7 +64,35 @@ export const parseErrors = (err: string) => {
     return "Wrong or expired expiration date";
   } else if (err.includes("RequestNotFound")) {
     return "Request not found";
+  } else if (err.includes("InvalidFileFormat")) {
+    return "Invalid file format";
+  } else if (err.includes("NoFileSelected")) {
+    return "No file selected";
   } else {
     return "Error during transaction";
   }
+};
+
+/**
+ * Checks if the given format is accepted.
+ *
+ * @param {string[]} acceptedFormats - An array of accepted formats.
+ * @param {string} format - The format to check.
+ * @return {boolean} Returns true if the format is accepted, otherwise false.
+ */
+export const checkFormatIsAccepted = (
+  listFormats: string[] | undefined,
+  format: string | undefined
+): boolean => {
+  if (!listFormats || !format) {
+    return false;
+  }
+
+  // Fix format string
+  if (!mappingFormats.hasOwnProperty(format)) {
+    return false;
+  }
+  format = mappingFormats[format];
+
+  return listFormats.includes(format);
 };

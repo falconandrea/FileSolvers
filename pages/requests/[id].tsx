@@ -6,7 +6,12 @@ import { NextPageWithLayout } from "@/pages/_app";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAccount, useNetwork } from "wagmi";
 import { getRequest } from "@/utils/functions";
-import { formatTimestamp, parseErrors, returnETH } from "@/utils/helpers";
+import {
+  checkFormatIsAccepted,
+  formatTimestamp,
+  parseErrors,
+  returnETH,
+} from "@/utils/helpers";
 import TransactionLink from "@/components/TransactionLink";
 import MessageAlert from "@/components/MessageAlert";
 import { useRouter } from "next/router";
@@ -82,11 +87,21 @@ const Detail: NextPageWithLayout = () => {
     setIsLoading(true);
 
     try {
-      setHash(hash);
+      // Check file is valid
+      if (!uploadedFile) {
+        throw new Error("NoFileSelected");
+      }
+
+      // Check format is accepted
+      if (!checkFormatIsAccepted(demand?.formatsAccepted, uploadedFile.type)) {
+        throw new Error("InvalidFileFormat");
+      }
 
       setMessageAlert("Transaction sent");
 
       // Reset form
+      setDescription("");
+      setUploadedFile(undefined);
     } catch (error: any) {
       setMessageStatus("error");
       setMessageAlert(parseErrors(error.toString()));
@@ -144,7 +159,11 @@ const Detail: NextPageWithLayout = () => {
           {showForm ? (
             <div className="px-4 max-w-xl mx-auto">
               {demand?.author != address ? (
-                <form onSubmit={handleSubmit}>
+                <form
+                  onSubmit={handleSubmit}
+                  method="POST"
+                  encType="multipart/form-data"
+                >
                   <h4 className="text-xl font-semibold mb-4">Upload a file</h4>
                   <div className="mb-4">
                     <label className="block text-gray-600">Description</label>
@@ -158,7 +177,10 @@ const Detail: NextPageWithLayout = () => {
                     ></textarea>
                   </div>
                   <div className="mb-4">
-                    <label className="block text-gray-600">File</label>
+                    <label className="block text-gray-600">
+                      File (accepted formats:
+                      {demand?.formatsAccepted.join(", ")})
+                    </label>
                     <input
                       type="file"
                       name="uploadedFile"

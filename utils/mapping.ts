@@ -1,0 +1,33 @@
+export const acceptedFormats = [
+  "pdf",
+  "docx",
+  "doc",
+  "jpg",
+  "png",
+  "txt",
+  "zip",
+  "mp4",
+  "mp3",
+  "wav",
+  "mov",
+  "avi",
+  "flv",
+  "webm",
+];
+export const mappingFormats = {
+  "application/pdf": "pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+    "docx",
+  "application/msword": "doc",
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "text/plain": "txt",
+  "application/zip": "zip",
+  "video/mp4": "mp4",
+  "audio/mp3": "mp3",
+  "audio/wav": "wav",
+  "video/quicktime": "mov",
+  "video/x-msvideo": "avi",
+  "video/x-flv": "flv",
+  "video/webm": "webm",
+};

@@ -9,6 +9,7 @@ import { createRequest } from "@/utils/functions";
 import { parseErrors } from "@/utils/helpers";
 import TransactionLink from "@/components/TransactionLink";
 import MessageAlert from "@/components/MessageAlert";
+import { acceptedFormats } from "@/utils/mapping";
 
 const Create: NextPageWithLayout = () => {
   const { isConnected, address } = useAccount();
@@ -110,21 +111,11 @@ const Create: NextPageWithLayout = () => {
                   style={{ height: "350px" }}
                   multiple
                 >
-                  <option value="pdf">PDF</option>
-                  <option value="docx">DOCX</option>
-                  <option value="doc">DOC</option>
-                  <option value="jpg">JPG</option>
-                  <option value="png">PNG</option>
-                  <option value="jpeg">JPEG</option>
-                  <option value="txt">TXT</option>
-                  <option value="zip">ZIP</option>
-                  <option value="mp4">MP4</option>
-                  <option value="mp3">MP3</option>
-                  <option value="wav">WAV</option>
-                  <option value="mov">MOV</option>
-                  <option value="avi">AVI</option>
-                  <option value="flv">FLV</option>
-                  <option value="webm">WEBM</option>
+                  {acceptedFormats.map((format) => (
+                    <option key={format} value={format}>
+                      {format.toUpperCase()}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="mb-4">
