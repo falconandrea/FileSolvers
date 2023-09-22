@@ -45,6 +45,9 @@ const Home: NextPageWithLayout = () => {
         </p>
 
         <div className="bg-slate-100 p-4 border rounded py-8">
+          <h3 className="text-xl text-center font-semibold mb-8">
+            Last 3 active requests
+          </h3>
           {demands.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {demands.map((demand, index) => (
