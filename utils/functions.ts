@@ -79,3 +79,19 @@ export const createRequest = async (
   });
   return { result, hash };
 };
+
+/**
+ * Retrieves a request by its ID.
+ *
+ * @param {number} id - The ID of the demand to retrieve.
+ * @return {Promise<Demand | null>} A Promise that resolves to the retrieved demand, or null if no demand was found.
+ */
+export const getRequest = async (id: number): Promise<Demand | null> => {
+  const data = (await readContract({
+    address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`,
+    abi: fileSolvers.abi,
+    functionName: "getRequest",
+    args: [id],
+  })) as Demand;
+  return data || null;
+};
