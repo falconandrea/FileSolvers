@@ -61,6 +61,8 @@ export const parseErrors = (err: string) => {
     return "Missing params";
   } else if (err.includes("WrongExpirationDate")) {
     return "Wrong or expired expiration date";
+  } else if (err.includes("RequestNotFound")) {
+    return "Request not found";
   } else {
     return "Error during transaction";
   }

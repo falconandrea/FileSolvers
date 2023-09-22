@@ -19,3 +19,9 @@ export type Demand = {
 export type CardProps = {
   demand: Demand;
 };
+
+export type RequestFile = {
+  fileName: string;
+  format: string;
+  cid: string;
+};
