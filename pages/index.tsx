@@ -1,12 +1,12 @@
 "use client";
 
 import { ReactElement, useEffect, useState } from "react";
-import Layout from "../components/Layout";
-import { NextPageWithLayout } from "./_app";
-import Card from "../components/Card";
-import { Demand } from "../utils/interfaces-types";
-import LoadingSpinner from "../components/LoadingSpinner";
-import { getRequests } from "../utils/functions";
+import Layout from "@/components/Layout";
+import { NextPageWithLayout } from "@/pages/_app";
+import Card from "@/components/Card";
+import { Demand } from "@/utils/interfaces-types";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import { getRequests } from "@/utils/functions";
 import Link from "next/link";
 
 const Home: NextPageWithLayout = () => {

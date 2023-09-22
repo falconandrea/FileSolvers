@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { CardProps } from "../utils/interfaces-types";
-import { formatTimestamp, returnETH, truncateString } from "../utils/helpers";
+import { CardProps } from "@/utils/interfaces-types";
+import { formatTimestamp, returnETH, truncateString } from "@/utils/helpers";
 
 /**
  * Renders a card component for a given demand.
@@ -30,7 +30,7 @@ const Card = ({ demand }: CardProps) => {
         <br /> {returnETH(demand.reward)}
       </p>
       <Link
-        href="/request/{request.id}"
+        href={`/requests/${demand.id}`}
         className="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded"
       >
         Detail

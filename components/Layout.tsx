@@ -5,7 +5,7 @@ import Header from "./Header";
 import Head from "next/head";
 import Providers from "./Providers";
 
-import { LayoutProps } from "../utils/interfaces-types";
+import { LayoutProps } from "@/utils/interfaces-types";
 
 /**
  * Render the Layout component.

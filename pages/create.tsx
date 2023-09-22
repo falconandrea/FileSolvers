@@ -1,14 +1,14 @@
 "use client";
 
 import { ReactElement, useEffect, useState } from "react";
-import Layout from "../components/Layout";
-import { NextPageWithLayout } from "./_app";
-import LoadingSpinner from "../components/LoadingSpinner";
+import Layout from "@/components/Layout";
+import { NextPageWithLayout } from "@/pages/_app";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAccount, useNetwork } from "wagmi";
-import { createRequest } from "../utils/functions";
-import { parseErrors } from "../utils/helpers";
-import TransactionLink from "../components/TransactionLink";
-import MessageAlert from "../components/MessageAlert";
+import { createRequest } from "@/utils/functions";
+import { parseErrors } from "@/utils/helpers";
+import TransactionLink from "@/components/TransactionLink";
+import MessageAlert from "@/components/MessageAlert";
 
 const Create: NextPageWithLayout = () => {
   const { isConnected, address } = useAccount();
