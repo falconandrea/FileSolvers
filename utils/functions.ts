@@ -20,6 +20,7 @@ const lighthouse = require("@lighthouse-web3/sdk");
  * @return {Demand[] | null} An array of demands or null if no demands are found.
  */
 export const getRequests = async (
+  filter: string,
   sortOrder: "ASC" | "DESC" = "ASC",
   withCompleted: boolean = true,
   limit: number = 0
@@ -27,7 +28,7 @@ export const getRequests = async (
   const data = (await readContract({
     address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`,
     abi: fileSolvers.abi,
-    functionName: "getRequests",
+    functionName: filter == "mine" ? "getMyRequests" : "getRequests",
     args: [],
   })) as Demand[];
 

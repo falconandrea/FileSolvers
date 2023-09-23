@@ -243,10 +243,15 @@ describe("FileSolvers", function () {
 
       // Create new request
       const request = await createSimpleRequest(contract, owner);
+
+      const mine = await contract.connect(owner).getMyRequests();
+      expect(mine.length).to.be.equal(1);
+
+      // Create new request not mine
       const request2 = await createSimpleRequest(contract, account1);
 
-      const requests = await contract.connect(owner).getMyRequests();
-      expect(requests.length).to.be.equal(1);
+      const mine2 = await contract.connect(owner).getMyRequests();
+      expect(mine2.length).to.be.equal(1);
     });
 
     it("Shouldn't get not exists request", async function () {

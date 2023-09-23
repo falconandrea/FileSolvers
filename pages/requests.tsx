@@ -11,19 +11,27 @@ import { getRequests } from "@/utils/functions";
 const Requests: NextPageWithLayout = () => {
   const [demands, setDemands] = useState<Demand[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [filter, setFilter] = useState<string>("all");
 
   useEffect(() => {
     setIsLoading(true);
 
     const fetchData = async () => {
-      const data = await getRequests("DESC", false, 3);
+      let data;
+      if (filter == "mine") {
+        data = await getRequests("mine", "DESC", true);
+      } else if (filter == "active") {
+        data = await getRequests("all", "DESC", false);
+      } else {
+        data = await getRequests("all", "DESC", true);
+      }
       setDemands(data);
       console.log(data);
       setIsLoading(false);
     };
 
     fetchData();
-  }, []);
+  }, [filter]);
 
   return (
     <main className="container mx-auto">
@@ -32,6 +40,24 @@ const Requests: NextPageWithLayout = () => {
         <h1 className="text-3xl font-semibold text-center mb-4 mt-4">
           All requests
         </h1>
+
+        <div className="text-right mr-4">
+          <div className="">
+            <label htmlFor="filterIsDone" className="text-sm p-2 mr-2">
+              Show:
+            </label>
+            <select
+              name="filterIsDone"
+              id="filterIsDone"
+              className="border p-2"
+              onChange={(e) => setFilter(e.target.value)}
+            >
+              <option value="all">All</option>
+              <option value="active">Requests active</option>
+              <option value="mine">Requests created by me</option>
+            </select>
+          </div>
+        </div>
 
         <div className="p-4">
           {demands.length > 0 ? (

@@ -17,7 +17,7 @@ const Home: NextPageWithLayout = () => {
     setIsLoading(true);
 
     const fetchData = async () => {
-      const data = await getRequests("DESC", false, 3);
+      const data = await getRequests("all", "DESC", false, 3);
       setDemands(data);
       console.log(data);
       setIsLoading(false);
