@@ -69,12 +69,8 @@ export const createRequest = async (
     address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`,
     abi: fileSolvers.abi,
     functionName: "createRequest",
-    args: [
-      description,
-      formatsAccepted,
-      parseEther(reward),
-      getTimestampFromDate(expirationDate),
-    ],
+    args: [description, formatsAccepted, getTimestampFromDate(expirationDate)],
+    value: parseEther(reward),
   });
   const { hash } = await writeContract(config);
   const result = await waitForTransaction({
