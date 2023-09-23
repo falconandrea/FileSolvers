@@ -57,7 +57,6 @@ export const returnETH = (amount: bigint): string => {
  * @return {string} The corresponding error message.
  */
 export const parseErrors = (err: string) => {
-  console.log(err);
   if (err.includes("MissingParams")) {
     return "Missing params";
   } else if (err.includes("WrongExpirationDate")) {
@@ -72,6 +71,8 @@ export const parseErrors = (err: string) => {
     return "File too big";
   } else if (err.includes("JustPartecipated")) {
     return "Just sent your file";
+  } else if (err.includes("AmountLessThanZero")) {
+    return "Amount less than zero";
   } else {
     return "Error during transaction";
   }
