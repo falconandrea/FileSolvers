@@ -5,7 +5,7 @@ import Layout from "@/components/Layout";
 import { NextPageWithLayout } from "@/pages/_app";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAccount, useNetwork } from "wagmi";
-import { getRequest } from "@/utils/functions";
+import { getRequest, sendFileToRequest, uploadFile } from "@/utils/functions";
 import {
   checkFormatIsAccepted,
   formatTimestamp,
@@ -17,6 +17,7 @@ import MessageAlert from "@/components/MessageAlert";
 import { useRouter } from "next/router";
 import { Demand, RequestFile } from "@/utils/interfaces-types";
 import PrintAddress from "@/components/PrintAddress";
+import { mappingFormats } from "@/utils/mapping";
 
 const Detail: NextPageWithLayout = () => {
   const { isConnected, address } = useAccount();
@@ -30,7 +31,6 @@ const Detail: NextPageWithLayout = () => {
   );
 
   const [description, setDescription] = useState<string>("");
-  const [file, setFile] = useState<RequestFile>();
   const [uploadedFile, setUploadedFile] = useState<File>();
 
   const [demand, setDemand] = useState<Demand>();
@@ -97,12 +97,33 @@ const Detail: NextPageWithLayout = () => {
         throw new Error("InvalidFileFormat");
       }
 
-      setMessageAlert("Transaction sent");
+      // Check file size is under 10Mb
+      if (uploadedFile.size > 10 * 1024 * 1024) {
+        throw new Error("FileTooBig");
+      }
+
+      // Upload file on FileCoin
+      const cid: string = await uploadFile(uploadedFile);
+      const file: RequestFile = {
+        cid,
+        fileName: uploadedFile.name,
+        format: mappingFormats[uploadedFile.type],
+      };
+
+      // Send file to request
+      const { result, hash } = await sendFileToRequest(
+        file,
+        requestId,
+        description
+      );
+      setHash(hash);
+      setMessageAlert("File uploaded");
 
       // Reset form
       setDescription("");
       setUploadedFile(undefined);
     } catch (error: any) {
+      console.log(error);
       setMessageStatus("error");
       setMessageAlert(parseErrors(error.toString()));
     }
@@ -179,7 +200,7 @@ const Detail: NextPageWithLayout = () => {
                   <div className="mb-4">
                     <label className="block text-gray-600">
                       File (accepted formats:
-                      {demand?.formatsAccepted.join(", ")})
+                      {demand?.formatsAccepted.join(", ")}) - Max 10MB
                     </label>
                     <input
                       type="file"
@@ -193,6 +214,7 @@ const Detail: NextPageWithLayout = () => {
                   >
                     Send
                   </button>
+                  <TransactionLink hash={hash} />
                 </form>
               ) : (
                 <p className="text-center text-gray-600">

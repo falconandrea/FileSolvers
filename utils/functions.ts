@@ -4,10 +4,12 @@ import {
   writeContract,
   waitForTransaction,
 } from "@wagmi/core";
-import { Demand } from "./interfaces-types";
+import { Demand, RequestFile } from "./interfaces-types";
 import fileSolvers from "../abi/FileSolvers.json";
 import { parseEther } from "viem";
 import { getTimestampFromDate } from "./helpers";
+
+const lighthouse = require("@lighthouse-web3/sdk");
 
 /**
  * Retrieves all the demands
@@ -94,4 +96,58 @@ export const getRequest = async (id: number): Promise<Demand | null> => {
     args: [id],
   })) as Demand;
   return data || null;
+};
+
+/**
+ * Uploads a file to FileCoin.
+ *
+ * @param {File} file - The path where the file will be uploaded.
+ * @return {Promise<any>} A promise that resolves with the response from the upload.
+ */
+export const uploadFile = async (file: File): Promise<any> => {
+  const apiKey = process.env.NEXT_PUBLIC_LIGHTHOUSE_APIKEY;
+  const dealParam = {
+    num_copies: 1, // max 3
+    repair_threshold: null, // default 10 days
+    renew_threshold: null, //2880 epoch per day, default 28800, min 240(2 hours)
+    miner: ["t017840"], //user miners
+    network: "calibration",
+  };
+  // Both file and folder supported by upload function
+  const response = await lighthouse.uploadBuffer(
+    file,
+    apiKey,
+    false,
+    dealParam
+  );
+  console.log(
+    "Visit at: https://gateway.lighthouse.storage/ipfs/" + response.data.Hash
+  );
+  return response.data.Hash;
+};
+
+/**
+ * Sends a file to a request.
+ *
+ * @param {RequestFile} file - The file to send.
+ * @param {number} id - The ID of the request.
+ * @param {string} description - The description of the file.
+ * @return {Promise<{ result: any, hash: any }>} - The result and hash of the transaction.
+ */
+export const sendFileToRequest = async (
+  file: RequestFile,
+  id: number,
+  description: string
+) => {
+  const config = await prepareWriteContract({
+    address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`,
+    abi: fileSolvers.abi,
+    functionName: "sendFileToRequest",
+    args: [id, file.fileName, file.format, description, file.cid],
+  });
+  const { hash } = await writeContract(config);
+  const result = await waitForTransaction({
+    hash,
+  });
+  return { result, hash };
 };

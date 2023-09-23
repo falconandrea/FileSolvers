@@ -68,6 +68,8 @@ export const parseErrors = (err: string) => {
     return "Invalid file format";
   } else if (err.includes("NoFileSelected")) {
     return "No file selected";
+  } else if (err.includes("FileTooBig")) {
+    return "File too big";
   } else {
     return "Error during transaction";
   }
