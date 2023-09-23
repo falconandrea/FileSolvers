@@ -37,7 +37,7 @@ const Header = () => {
           title="All the requests"
           className="text-gray-800 hover:underline mr-8"
         >
-          All
+          List
         </Link>
       </div>
     </header>
