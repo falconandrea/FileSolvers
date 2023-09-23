@@ -1,4 +1,5 @@
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
+const helpers = require("@nomicfoundation/hardhat-network-helpers");
 const { expect } = require("chai");
 const hre = require("hardhat");
 require("dotenv").config();
@@ -170,9 +171,30 @@ describe("FileSolvers", function () {
       expect(tx).to.not.be.not.reverted;
 
       const [after, files] = await contract.getRequest(0);
-      expect(Number(before[9])).to.be.equal(Number(after[9]) - 1);
+      expect(Number(before[10])).to.be.equal(Number(after[10]) - 1);
 
       expect(files[0][1]).to.be.equal("test.pdf");
+    });
+
+    it("Shouldn't send a file if you are the author", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // Create new request
+      const [request] = await createSimpleRequest(contract, owner);
+
+      await expect(
+        contract
+          .connect(owner)
+          .sendFileToRequest(
+            request[0],
+            "test.pdf",
+            "pdf",
+            "Simple PDF",
+            "abc123"
+          )
+      ).to.be.revertedWithCustomError(contract, "YouCantPartecipate");
     });
 
     it("Shouldn't send a file without required fields", async function () {
@@ -297,4 +319,223 @@ describe("FileSolvers", function () {
       );
     });
   });
+
+  describe("Expired requests", function () {
+    it("Should request expired", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // Create new request
+      const [request] = await createSimpleRequest(contract, owner);
+
+      // Move 2 days in the future after the expiration date
+      await helpers.time.increase(2 * 24 * 60 * 60);
+
+      await contract.closeExpiredRequest();
+
+      const [requestAfter] = await contract.getRequest(0);
+      expect(request[2]).to.be.false;
+      expect(requestAfter[2]).to.be.true;
+    });
+
+    it("Shouldn't send file to expired request", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // Create new request
+      const [request] = await createSimpleRequest(contract, owner);
+
+      // Move 2 days in the future after the expiration date
+      await helpers.time.increase(2 * 24 * 60 * 60);
+
+      await contract.closeExpiredRequest();
+
+      // Send file
+      await expect(
+        contract.sendFileToRequest(
+          request[0],
+          "test.pdf",
+          "pdf",
+          "Simple PDF",
+          "abc123"
+        )
+      ).to.be.revertedWithCustomError(contract, "RequestClosed");
+    });
+  });
+
+  describe("Withdraw reward from a request", function () {
+    it("Should withdraw reward from a request", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // Create new request
+      const [request] = await createSimpleRequest(contract, owner);
+
+      // Get contract balance and user balance before closing
+      const balanceContractBefore = await hre.ethers.provider.getBalance(
+        contract.target
+      );
+      const balanceUserBefore = await hre.ethers.provider.getBalance(
+        owner.address
+      );
+
+      // Move 2 days in the future after the expiration date
+      await helpers.time.increase(2 * 24 * 60 * 60);
+
+      // Close request without partecipants
+      await contract.closeExpiredRequest();
+
+      // Withdraw reward
+      const tx = await contract.withdrawReward(request[0]);
+      expect(tx).to.not.be.not.reverted;
+
+      // Get contract balance and user balance after closing
+      const balanceContractAfter = await hre.ethers.provider.getBalance(
+        contract.target
+      );
+      const balanceUserAfter = await hre.ethers.provider.getBalance(
+        owner.address
+      );
+
+      // Check balances
+      expect(balanceContractAfter).to.be.equal(
+        balanceContractBefore - hre.ethers.parseEther("0.1")
+      );
+
+      expect(balanceUserAfter).to.be.greaterThan(
+        balanceUserBefore + hre.ethers.parseEther("0.09")
+      );
+    });
+    it("Should withdraw reward from a request if you are the owner", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // Create new request
+      const [request] = await createSimpleRequest(contract, account1);
+
+      // Get contract balance and user balance before closing
+      const balanceContractBefore = await hre.ethers.provider.getBalance(
+        contract.target
+      );
+      const balanceUserBefore = await hre.ethers.provider.getBalance(
+        account1.address
+      );
+
+      // Move 2 days in the future after the expiration date
+      await helpers.time.increase(2 * 24 * 60 * 60);
+
+      // Close request without partecipants
+      await contract.closeExpiredRequest();
+
+      // Withdraw reward
+      const tx = await contract.withdrawReward(request[0]);
+      expect(tx).to.not.be.not.reverted;
+
+      // Get contract balance and user balance after closing
+      const balanceContractAfter = await hre.ethers.provider.getBalance(
+        contract.target
+      );
+      const balanceUserAfter = await hre.ethers.provider.getBalance(
+        account1.address
+      );
+
+      // Check balances
+      expect(balanceContractAfter).to.be.equal(
+        balanceContractBefore - hre.ethers.parseEther("0.1")
+      );
+
+      expect(balanceUserAfter).to.be.greaterThan(
+        balanceUserBefore + hre.ethers.parseEther("0.09")
+      );
+    });
+    it("Shouldn't withdraw reward from a request twice", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // Create new request
+      const [request] = await createSimpleRequest(contract, owner);
+
+      // Move 2 days in the future after the expiration date
+      await helpers.time.increase(2 * 24 * 60 * 60);
+
+      // Close request without partecipants
+      await contract.closeExpiredRequest();
+
+      // Withdraw reward
+      const tx = await contract.withdrawReward(request[0]);
+      expect(tx).to.not.be.not.reverted;
+
+      // Revert Withdraw reward
+      await expect(
+        contract.withdrawReward(request[0])
+      ).to.be.revertedWithCustomError(contract, "JustWithdraw");
+    });
+    it("Shouldn't withdraw reward from a active request", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // Create new request
+      const [request] = await createSimpleRequest(contract, owner);
+
+      // Revert Withdraw reward
+      await expect(
+        contract.withdrawReward(request[0])
+      ).to.be.revertedWithCustomError(contract, "RequestNotClosed");
+    });
+    it("Shouldn't withdraw reward from a request with partecipants", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // Create new request
+      const [request] = await createSimpleRequest(contract, owner);
+
+      // Send file
+      await contract
+        .connect(account1)
+        .sendFileToRequest(
+          request[0],
+          "test.pdf",
+          "pdf",
+          "Simple PDF",
+          "abc123"
+        );
+
+      // Move 2 days in the future after the expiration date
+      await helpers.time.increase(2 * 24 * 60 * 60);
+
+      await contract.closeExpiredRequest();
+
+      // Revert Withdraw reward
+      await expect(
+        contract.withdrawReward(request[0])
+      ).to.be.revertedWithCustomError(contract, "HaveToChooseWinner");
+    });
+
+    it("Shouldn't withdraw reward from a not yours request", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // Create new request
+      const [request] = await createSimpleRequest(contract, owner);
+
+      // Move 2 days in the future after the expiration date
+      await helpers.time.increase(2 * 24 * 60 * 60);
+
+      await contract.closeExpiredRequest();
+
+      // Revert Withdraw reward
+      await expect(
+        contract.connect(account2).withdrawReward(request[0])
+      ).to.be.revertedWithCustomError(contract, "YouAreNotTheAuthor");
+    });
+  });
+  describe("Choose a winner", function () {});
 });

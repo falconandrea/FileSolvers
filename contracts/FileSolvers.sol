@@ -12,6 +12,7 @@ contract FileSolvers {
         address winner;
         string[] formatsAccepted;
         uint reward;
+        bool returnReward;
         uint creationDate;
         uint expirationDate;
         uint filesCount;
@@ -39,11 +40,24 @@ contract FileSolvers {
     error WrongFormat();
     error MissingParams();
     error RequestClosed();
+    error RequestNotClosed();
     error JustPartecipated();
     error AmountLessThanZero();
+    error YouAreNotTheAuthor();
+    error YouCantPartecipate();
+    error JustWithdraw();
+    error HaveToChooseWinner();
+    error NoPartecipants();
+    error JustHaveAWinner();
+    error FileNotFound();
 
     constructor() {
         owner = msg.sender;
+    }
+
+    modifier requestExists(uint id) {
+        if (id >= countRequests) revert RequestNotFound();
+        _;
     }
 
     /**
@@ -72,6 +86,7 @@ contract FileSolvers {
             address(0),
             formatsAccepted,
             reward,
+            false,
             currentTimestamp,
             expirationDate,
             0,
@@ -89,7 +104,7 @@ contract FileSolvers {
     function checkFormat(
         uint id,
         string calldata formatToCheck
-    ) internal view returns (bool) {
+    ) internal view requestExists(id) returns (bool) {
         Request memory request = requests[id];
         string[] memory formatsAccepted = request.formatsAccepted;
         for (uint i = 0; i < formatsAccepted.length; i++) {
@@ -130,9 +145,8 @@ contract FileSolvers {
         string calldata format,
         string calldata description,
         string calldata cid
-    ) external {
+    ) external requestExists(id) {
         // Checks
-        if (id >= countRequests) revert RequestNotFound();
         Request memory request = requests[id];
         if (request.isDone) revert RequestClosed();
         if (bytes(fileName).length == 0) revert MissingParams();
@@ -141,6 +155,10 @@ contract FileSolvers {
         if (!checkFormat(id, format)) revert WrongFormat();
         if (includes(requestPartecipants[id], msg.sender))
             revert JustPartecipated();
+        if (
+            keccak256(abi.encode(msg.sender)) ==
+            keccak256(abi.encode(request.author))
+        ) revert YouCantPartecipate();
 
         // Save file
         File memory file = File(
@@ -165,8 +183,7 @@ contract FileSolvers {
      */
     function getRequest(
         uint id
-    ) external view returns (Request memory, File[] memory) {
-        if (id >= countRequests) revert RequestNotFound();
+    ) external view requestExists(id) returns (Request memory, File[] memory) {
         File[] memory tempFiles = new File[](requestFiles[id].length);
         for (uint i = 0; i < requestFiles[id].length; i++) {
             tempFiles[i] = files[requestFiles[id][i]];
@@ -213,5 +230,82 @@ contract FileSolvers {
             }
         }
         return result;
+    }
+
+    /**
+     * Close expired requests
+     **/
+    function closeExpiredRequest() external {
+        for (uint i = 0; i < countRequests; i++) {
+            if (
+                requests[i].isDone == false &&
+                requests[i].expirationDate <= block.timestamp
+            ) {
+                requests[i].isDone = true;
+            }
+        }
+    }
+
+    /**
+     * Withdraw reward for closed requests without any participation
+     * (the owner can send the reward to the creator)
+     **/
+    function withdrawReward(uint id) external requestExists(id) {
+        // Checks
+        Request memory request = requests[id];
+        if (!request.isDone) revert RequestNotClosed();
+        if (request.returnReward) revert JustWithdraw();
+        if (request.filesCount > 0) revert HaveToChooseWinner();
+        if (
+            (keccak256(abi.encode(msg.sender)) !=
+                keccak256(abi.encode(request.author))) &&
+            keccak256(abi.encode(msg.sender)) != keccak256(abi.encode(owner))
+        ) revert YouAreNotTheAuthor();
+
+        // Set returnReward to true
+        requests[id].returnReward = true;
+
+        // Withdraw
+        bool result = payable(request.author).send(request.reward);
+        require(result, "Withdraw failed");
+    }
+
+    /**
+     * The author choose the winner for a closed request with partecipants
+     * (in case the author don't choose the winner, the owner will be chosen)
+     * @param id - id of the request
+     * @param file - file id of the winner
+     */
+    function chooseWinner(uint id, uint file) external requestExists(id) {
+        // Request checks
+        Request memory request = requests[id];
+        if (!request.isDone) revert RequestNotClosed();
+        if (request.filesCount == 0) revert NoPartecipants();
+        if (
+            (keccak256(abi.encode(msg.sender)) !=
+                keccak256(abi.encode(request.author))) &&
+            (keccak256(abi.encode(msg.sender)) != keccak256(abi.encode(owner)))
+        ) revert YouAreNotTheAuthor();
+        if (request.winner != address(0)) revert JustHaveAWinner();
+
+        // Check if file is inside request files
+        if (file >= countFiles) revert FileNotFound();
+        bool found = false;
+        for (uint i = 0; i < requestFiles[id].length; i++) {
+            if (requestFiles[id][i] == file) {
+                found = true;
+            }
+        }
+        if (!found) revert FileNotFound();
+
+        // Get the winner
+        address winner = files[file].author;
+
+        // Set the winner
+        requests[id].winner = winner;
+
+        // And send the reward
+        bool result = payable(winner).send(request.reward);
+        require(result, "Send reward failed");
     }
 }
