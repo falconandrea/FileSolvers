@@ -40,6 +40,7 @@ contract FileSolvers {
     error MissingParams();
     error RequestClosed();
     error JustPartecipated();
+    error AmountLessThanZero();
 
     constructor() {
         owner = msg.sender;
@@ -49,16 +50,16 @@ contract FileSolvers {
      * Create a new request
      * @param description - description of the request
      * @param formatsAccepted - array with file formats accepted
-     * @param reward - reward for the winner
      * @param expirationDate - expiration date for the request
      */
     function createRequest(
         string calldata description,
         string[] calldata formatsAccepted,
-        uint reward,
         uint expirationDate
-    ) external {
-        if (reward <= 0) revert MissingParams();
+    ) external payable {
+        uint256 reward = msg.value;
+
+        if (reward <= 0) revert AmountLessThanZero();
         if (formatsAccepted.length == 0) revert MissingParams();
         if (bytes(description).length == 0) revert MissingParams();
         uint currentTimestamp = block.timestamp;
@@ -159,12 +160,18 @@ contract FileSolvers {
     }
 
     /**
-     * Return the request required
+     * Return the request required with its files
      * @param id - id of the request
      */
-    function getRequest(uint id) external view returns (Request memory) {
+    function getRequest(
+        uint id
+    ) external view returns (Request memory, File[] memory) {
         if (id >= countRequests) revert RequestNotFound();
-        return requests[id];
+        File[] memory tempFiles = new File[](requestFiles[id].length);
+        for (uint i = 0; i < requestFiles[id].length; i++) {
+            tempFiles[i] = files[requestFiles[id][i]];
+        }
+        return (requests[id], tempFiles);
     }
 
     /**

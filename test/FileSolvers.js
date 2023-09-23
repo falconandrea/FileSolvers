@@ -20,14 +20,16 @@ describe("FileSolvers", function () {
       .createRequest(
         "Simple description",
         ["pdf", "doc", "docx"],
-        hre.ethers.parseEther("0.1"),
-        Math.floor(Date.now() / 1000) + 2000
+        Math.floor(Date.now() / 1000) + 2000,
+        {
+          value: hre.ethers.parseEther("0.1"),
+        }
       );
 
-    // Get request
-    const request = await contract.getRequest(0);
+    // Get request and files
+    const [request, files] = await contract.getRequest(0);
 
-    return request;
+    return [request, files];
   }
 
   describe("Deploy", function () {
@@ -43,22 +45,39 @@ describe("FileSolvers", function () {
         deployFixture
       );
 
+      // Get contract balance before
+      const balanceBefore = await hre.ethers.provider.getBalance(
+        contract.target
+      );
+
       // Create new request
       const tx = await contract
         .connect(owner)
         .createRequest(
           "Simple description",
           ["pdf", "doc", "docx"],
-          hre.ethers.parseEther("0.1"),
-          Math.floor(Date.now() / 1000) + 2000
+          Math.floor(Date.now() / 1000) + 2000,
+          {
+            value: hre.ethers.parseEther("0.1"),
+          }
         );
 
       // Check tx is not reverted
       expect(tx).to.not.be.not.reverted;
 
+      // Get contract balance after
+      const balanceAfter = await hre.ethers.provider.getBalance(
+        contract.target
+      );
+
       // Get request created
-      const request = await contract.getRequest(0);
+      const [request] = await contract.getRequest(0);
       expect(Number(request[0])).to.be.equal(0);
+
+      // Check balance
+      expect(balanceBefore + hre.ethers.parseEther("0.1")).to.be.equal(
+        balanceAfter
+      );
     });
     it("Shouldn't create new request without required fields", async function () {
       const { contract, owner, account1, account2 } = await loadFixture(
@@ -72,8 +91,10 @@ describe("FileSolvers", function () {
           .createRequest(
             "",
             ["pdf", "doc", "docx"],
-            hre.ethers.parseEther("0.1"),
-            Math.floor(Date.now() / 1000) + 2000
+            Math.floor(Date.now() / 1000) + 2000,
+            {
+              value: hre.ethers.parseEther("0.1"),
+            }
           )
       ).to.be.revertedWithCustomError(contract, "MissingParams");
 
@@ -84,18 +105,22 @@ describe("FileSolvers", function () {
           .createRequest(
             "Simple description",
             ["pdf", "doc", "docx"],
-            hre.ethers.parseEther("0"),
-            Math.floor(Date.now() / 1000) + 2000
+            Math.floor(Date.now() / 1000) + 2000,
+            {
+              value: hre.ethers.parseEther("0"),
+            }
           )
-      ).to.be.revertedWithCustomError(contract, "MissingParams");
+      ).to.be.revertedWithCustomError(contract, "AmountLessThanZero");
 
       // With a wrong timestamp
       await expect(
         contract.connect(owner).createRequest(
           "Simple description",
           ["pdf", "doc", "docx"],
-          hre.ethers.parseEther("0.2"),
-          Math.floor((Date.now() - 86400000) / 1000) // yesterday
+          Math.floor((Date.now() - 86400000) / 1000), // yesterday
+          {
+            value: hre.ethers.parseEther("0.2"),
+          }
         )
       ).to.be.revertedWithCustomError(contract, "WrongExpirationDate");
 
@@ -106,8 +131,10 @@ describe("FileSolvers", function () {
           .createRequest(
             "Simple description",
             [],
-            hre.ethers.parseEther("0.2"),
-            Math.floor(Date.now() / 1000) + 2000
+            Math.floor(Date.now() / 1000) + 2000,
+            {
+              value: hre.ethers.parseEther("0.2"),
+            }
           )
       ).to.be.revertedWithCustomError(contract, "MissingParams");
 
@@ -126,8 +153,8 @@ describe("FileSolvers", function () {
       );
 
       // Create new request
-      const request = await createSimpleRequest(contract, owner);
-      const before = await contract.getRequest(0);
+      const [request] = await createSimpleRequest(contract, owner);
+      const [before] = await contract.getRequest(0);
 
       const tx = await contract
         .connect(account1)
@@ -142,8 +169,10 @@ describe("FileSolvers", function () {
       // Check tx is not reverted
       expect(tx).to.not.be.not.reverted;
 
-      const after = await contract.getRequest(0);
+      const [after, files] = await contract.getRequest(0);
       expect(Number(before[9])).to.be.equal(Number(after[9]) - 1);
+
+      expect(files[0][1]).to.be.equal("test.pdf");
     });
 
     it("Shouldn't send a file without required fields", async function () {
@@ -152,7 +181,7 @@ describe("FileSolvers", function () {
       );
 
       // Create new request
-      const request = await createSimpleRequest(contract, owner);
+      const [request] = await createSimpleRequest(contract, owner);
 
       // Without filename
       await expect(
@@ -194,8 +223,8 @@ describe("FileSolvers", function () {
       );
 
       // Create new request
-      const request = await createSimpleRequest(contract, owner);
-      const before = await contract.getRequest(0);
+      const [request] = await createSimpleRequest(contract, owner);
+      const [before] = await contract.getRequest(0);
 
       const tx = await contract
         .connect(account1)
@@ -229,8 +258,8 @@ describe("FileSolvers", function () {
       );
 
       // Create new request
-      const request = await createSimpleRequest(contract, owner);
-      const request2 = await createSimpleRequest(contract, account1);
+      const [request] = await createSimpleRequest(contract, owner);
+      const [request2] = await createSimpleRequest(contract, account1);
 
       const requests = await contract.getRequests();
       expect(requests.length).to.be.equal(2);
@@ -242,13 +271,13 @@ describe("FileSolvers", function () {
       );
 
       // Create new request
-      const request = await createSimpleRequest(contract, owner);
+      const [request] = await createSimpleRequest(contract, owner);
 
       const mine = await contract.connect(owner).getMyRequests();
       expect(mine.length).to.be.equal(1);
 
       // Create new request not mine
-      const request2 = await createSimpleRequest(contract, account1);
+      const [request2] = await createSimpleRequest(contract, account1);
 
       const mine2 = await contract.connect(owner).getMyRequests();
       expect(mine2.length).to.be.equal(1);
@@ -260,7 +289,7 @@ describe("FileSolvers", function () {
       );
 
       // Create new request
-      const request = await createSimpleRequest(contract, owner);
+      const [request] = await createSimpleRequest(contract, owner);
 
       await expect(contract.getRequest(1)).to.be.revertedWithCustomError(
         contract,
