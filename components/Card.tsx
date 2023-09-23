@@ -10,7 +10,7 @@ import { formatTimestamp, returnETH, truncateString } from "@/utils/helpers";
  */
 const Card = ({ demand }: CardProps) => {
   return (
-    <div className="bg-white p-4 border rounded shadow-md">
+    <div className="bg-slate-100 p-4 border rounded shadow-md">
       <p className="text-gray-600 mt-2">
         <strong>Request:</strong>
         <br />
@@ -35,7 +35,7 @@ const Card = ({ demand }: CardProps) => {
       </p>
       <Link
         href={`/requests/${demand.id}`}
-        className="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded"
+        className="mt-4 inline-block bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
       >
         Detail
       </Link>

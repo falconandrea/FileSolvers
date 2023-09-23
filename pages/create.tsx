@@ -75,11 +75,11 @@ const Create: NextPageWithLayout = () => {
       {isLoading && <LoadingSpinner />}
       <MessageAlert message={messageAlert} messageStatus={messageStatus} />
       {showForm ? (
-        <div className="py-16 px-4 max-w-xl mx-auto">
+        <div className="py-4 px-4 max-w-xl mx-auto">
+          <h1 className="text-3xl font-semibold text-center mb-8 mt-4">
+            Create new request
+          </h1>
           <div className="bg-slate-100 p-4 border rounded">
-            <h1 className="text-3xl font-semibold mb-4">
-              Create a new request
-            </h1>
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
                 <label className="block text-gray-600">Description</label>

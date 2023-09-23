@@ -24,13 +24,13 @@ const Header = () => {
         FileSolvers
       </Link>
       <div className="flex flex-row-reverse items-center">
-        <ConnectButton />
+        <ConnectButton accountStatus="avatar" />
         <Link
-          href="/my"
-          title="My requests"
+          href="/create"
+          title="Create request"
           className="text-gray-800 hover:underline mr-8"
         >
-          Yours
+          New
         </Link>
         <Link
           href="/requests"

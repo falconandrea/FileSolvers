@@ -136,9 +136,11 @@ const Detail: NextPageWithLayout = () => {
       {isLoading && <LoadingSpinner />}
       <MessageAlert message={messageAlert} messageStatus={messageStatus} />
 
-      <div className="pt-16 pb-8 px-4 max-w-xl mx-auto">
+      <div className="pt-4 pb-4 px-4 max-w-xl mx-auto">
+        <h1 className="text-3xl font-semibold text-center mb-8 mt-4">
+          Detail request
+        </h1>
         <div className="bg-slate-100 p-4 border rounded">
-          <h1 className="text-3xl font-semibold mb-4">Detail request</h1>
           {demand ? (
             <div className="mb-8">
               <p className="text-gray-600 mt-2">
