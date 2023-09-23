@@ -73,6 +73,20 @@ export const parseErrors = (err: string) => {
     return "Just sent your file";
   } else if (err.includes("AmountLessThanZero")) {
     return "Amount less than zero";
+  } else if (err.includes("YouAreNotTheAuthor")) {
+    return "You are not the author";
+  } else if (err.includes("RequestNotClosed")) {
+    return "Request not closed";
+  } else if (err.includes("JustWithdraw")) {
+    return "Nothing to withdraw";
+  } else if (err.includes("HaveToChooseWinner")) {
+    return "You have to choose a winner";
+  } else if (err.includes("NoPartecipants")) {
+    return "No participants";
+  } else if (err.includes("JustHaveAWinner")) {
+    return "You have just chosen a winner";
+  } else if (err.includes("FileNotFound")) {
+    return "File not found";
   } else {
     return "Error during transaction";
   }
