@@ -70,6 +70,8 @@ export const parseErrors = (err: string) => {
     return "No file selected";
   } else if (err.includes("FileTooBig")) {
     return "File too big";
+  } else if (err.includes("JustPartecipated")) {
+    return "Just sent your file";
   } else {
     return "Error during transaction";
   }

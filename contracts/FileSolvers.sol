@@ -39,6 +39,7 @@ contract FileSolvers {
     error WrongFormat();
     error MissingParams();
     error RequestClosed();
+    error JustPartecipated();
 
     constructor() {
         owner = msg.sender;
@@ -100,6 +101,21 @@ contract FileSolvers {
     }
 
     /**
+     * Check if address in inside array
+     * @param array - array where we want to check
+     * @param value - value we want to check
+     */
+    function includes(
+        address[] memory array,
+        address value
+    ) internal pure returns (bool) {
+        for (uint i = 0; i < array.length; i++) {
+            if (array[i] == value) return true;
+        }
+        return false;
+    }
+
+    /**
      * Send a file to a request
      * @param id - id of the request
      * @param fileName - name of the file
@@ -122,6 +138,8 @@ contract FileSolvers {
         if (bytes(cid).length == 0) revert MissingParams();
         if (bytes(description).length == 0) revert MissingParams();
         if (!checkFormat(id, format)) revert WrongFormat();
+        if (includes(requestPartecipants[id], msg.sender))
+            revert JustPartecipated();
 
         // Save file
         File memory file = File(

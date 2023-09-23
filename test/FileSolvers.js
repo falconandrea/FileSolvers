@@ -187,6 +187,39 @@ describe("FileSolvers", function () {
           )
       ).to.be.revertedWithCustomError(contract, "WrongFormat");
     });
+
+    it("Shouldn't send a file twice", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // Create new request
+      const request = await createSimpleRequest(contract, owner);
+      const before = await contract.getRequest(0);
+
+      const tx = await contract
+        .connect(account1)
+        .sendFileToRequest(
+          request[0],
+          "test.pdf",
+          "pdf",
+          "Simple PDF",
+          "abc123"
+        );
+
+      // With a not accepted format
+      await expect(
+        contract
+          .connect(account1)
+          .sendFileToRequest(
+            request[0],
+            "filename2.pdf",
+            "pdf",
+            "Second PDF",
+            "abc123123"
+          )
+      ).to.be.revertedWithCustomError(contract, "JustPartecipated");
+    });
   });
 
   describe("Get requests", function () {
