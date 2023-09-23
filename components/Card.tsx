@@ -29,6 +29,10 @@ const Card = ({ demand }: CardProps) => {
         <strong>Reward: </strong>
         <br /> {returnETH(demand.reward)}
       </p>
+      <p className="text-gray-600 mt-2">
+        <strong>Partecipants: </strong>
+        <br /> {Number(demand.filesCount)}
+      </p>
       <Link
         href={`/requests/${demand.id}`}
         className="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded"
