@@ -57,6 +57,7 @@ export const returnETH = (amount: bigint): string => {
  * @return {string} The corresponding error message.
  */
 export const parseErrors = (err: string) => {
+  console.log(err);
   if (err.includes("MissingParams")) {
     return "Missing params";
   } else if (err.includes("WrongExpirationDate")) {
@@ -69,22 +70,22 @@ export const parseErrors = (err: string) => {
     return "No file selected";
   } else if (err.includes("FileTooBig")) {
     return "File too big";
-  } else if (err.includes("JustPartecipated")) {
-    return "Just sent your file";
+  } else if (err.includes("AlreadyParticipated")) {
+    return "Already sent your file";
   } else if (err.includes("AmountLessThanZero")) {
     return "Amount less than zero";
   } else if (err.includes("YouAreNotTheAuthor")) {
     return "You are not the author";
   } else if (err.includes("RequestNotClosed")) {
     return "Request not closed";
-  } else if (err.includes("JustWithdraw")) {
+  } else if (err.includes("AlreadyWithdraw")) {
     return "Nothing to withdraw";
   } else if (err.includes("HaveToChooseWinner")) {
     return "You have to choose a winner";
-  } else if (err.includes("NoPartecipants")) {
+  } else if (err.includes("NoParticipants")) {
     return "No participants";
-  } else if (err.includes("JustHaveAWinner")) {
-    return "You have just chosen a winner";
+  } else if (err.includes("AlreadyHaveAWinner")) {
+    return "You have already chosen a winner";
   } else if (err.includes("FileNotFound")) {
     return "File not found";
   } else {

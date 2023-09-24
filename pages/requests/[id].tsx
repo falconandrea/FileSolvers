@@ -15,7 +15,7 @@ import {
 import TransactionLink from "@/components/TransactionLink";
 import MessageAlert from "@/components/MessageAlert";
 import { useRouter } from "next/router";
-import { Demand, RequestFile } from "@/utils/interfaces-types";
+import { Demand, ParticipantFile, RequestFile } from "@/utils/interfaces-types";
 import PrintAddress from "@/components/PrintAddress";
 import { mappingFormats } from "@/utils/mapping";
 
@@ -34,8 +34,13 @@ const Detail: NextPageWithLayout = () => {
   const [uploadedFile, setUploadedFile] = useState<File>();
 
   const [demand, setDemand] = useState<Demand>();
+  const [files, setFiles] = useState<ParticipantFile[]>([]);
   const [requestId, setRequestId] = useState<number>(-1);
   const router = useRouter();
+
+  const [isTheAuthor, setIsTheAuthor] = useState<boolean>(false);
+  const [alreadyParticipated, setAlreadyParticipated] =
+    useState<boolean>(false);
 
   /**
    * Retrieves request data based on the provided ID.
@@ -45,14 +50,24 @@ const Detail: NextPageWithLayout = () => {
    */
   const getRequestData = async (id: number) => {
     try {
-      const result: Demand | null = await getRequest(id);
-      if (result) {
-        console.log(result);
-        setDemand(result);
+      const [demand, files]: [Demand, ParticipantFile[]] = await getRequest(id);
+      setDemand(demand);
+      setFiles(files);
+      if (demand.author === address) {
+        setIsTheAuthor(true);
       } else {
-        setMessageAlert(parseErrors("RequestNotFound"));
-        setMessageStatus("error");
+        setIsTheAuthor(false);
       }
+
+      // Check if user had already submitted a file
+      let canParticipate = true;
+      if (files.length > 0) {
+        for (const file of files) {
+          if (file.author == address) canParticipate = false;
+        }
+      }
+      if (canParticipate) setAlreadyParticipated(false);
+      else setAlreadyParticipated(true);
     } catch (error: any) {
       setMessageStatus("error");
       setMessageAlert(parseErrors(error.toString()));
@@ -68,7 +83,7 @@ const Detail: NextPageWithLayout = () => {
       getRequestData(id);
       setIsLoading(false);
     }
-  }, [router.isReady]);
+  }, [router.isReady, address]);
 
   useEffect(() => {
     setShowForm(isConnected && chain && chain.name == "Sepolia" ? true : false);
@@ -167,7 +182,7 @@ const Detail: NextPageWithLayout = () => {
                 <br /> {returnETH(demand.reward)}
               </p>
               <p className="text-gray-600 mt-2">
-                <strong>Partecipants: </strong>
+                <strong>Participants: </strong>
                 <br /> {Number(demand.filesCount)}
               </p>
             </div>
@@ -181,7 +196,7 @@ const Detail: NextPageWithLayout = () => {
         <div className="bg-slate-100 p-4 border rounded py-8">
           {showForm ? (
             <div className="px-4 max-w-xl mx-auto">
-              {demand?.author != address ? (
+              {!isTheAuthor && !alreadyParticipated && (
                 <form
                   onSubmit={handleSubmit}
                   method="POST"
@@ -218,9 +233,15 @@ const Detail: NextPageWithLayout = () => {
                   </button>
                   <TransactionLink hash={hash} />
                 </form>
-              ) : (
+              )}
+              {isTheAuthor && (
                 <p className="text-center text-gray-600">
                   You are the author, you cannot upload a file
+                </p>
+              )}
+              {alreadyParticipated && (
+                <p className="text-center text-gray-600">
+                  You have already participated in this request
                 </p>
               )}
             </div>

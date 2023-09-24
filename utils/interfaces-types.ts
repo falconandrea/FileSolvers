@@ -25,3 +25,13 @@ export type RequestFile = {
   format: string;
   cid: string;
 };
+
+export type ParticipantFile = {
+  author: `0x${string}`;
+  cid: string;
+  creationDate: bigint;
+  description: string;
+  fileName: string;
+  format: string;
+  id: bigint;
+};

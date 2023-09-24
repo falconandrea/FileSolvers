@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import "hardhat/console.sol";
-
 contract FileSolvers {
     struct Request {
         uint id;
@@ -31,7 +29,7 @@ contract FileSolvers {
     uint countFiles;
     mapping(uint => Request) requests;
     mapping(uint => File) files;
-    mapping(uint => address[]) requestPartecipants;
+    mapping(uint => address[]) requestParticipants;
     mapping(uint => uint[]) requestFiles;
     address owner;
 
@@ -41,14 +39,14 @@ contract FileSolvers {
     error MissingParams();
     error RequestClosed();
     error RequestNotClosed();
-    error JustPartecipated();
+    error AlreadyParticipated();
     error AmountLessThanZero();
     error YouAreNotTheAuthor();
-    error YouCantPartecipate();
-    error JustWithdraw();
+    error YouCantParticipate();
+    error AlreadyWithdraw();
     error HaveToChooseWinner();
-    error NoPartecipants();
-    error JustHaveAWinner();
+    error NoParticipants();
+    error AlreadyHaveAWinner();
     error FileNotFound();
 
     constructor() {
@@ -153,12 +151,12 @@ contract FileSolvers {
         if (bytes(cid).length == 0) revert MissingParams();
         if (bytes(description).length == 0) revert MissingParams();
         if (!checkFormat(id, format)) revert WrongFormat();
-        if (includes(requestPartecipants[id], msg.sender))
-            revert JustPartecipated();
+        if (includes(requestParticipants[id], msg.sender))
+            revert AlreadyParticipated();
         if (
             keccak256(abi.encode(msg.sender)) ==
             keccak256(abi.encode(request.author))
-        ) revert YouCantPartecipate();
+        ) revert YouCantParticipate();
 
         // Save file
         File memory file = File(
@@ -171,7 +169,7 @@ contract FileSolvers {
             block.timestamp
         );
         files[countFiles] = file;
-        requestPartecipants[id].push(msg.sender);
+        requestParticipants[id].push(msg.sender);
         requestFiles[id].push(countFiles);
         requests[id].filesCount++;
         countFiles++;
@@ -254,7 +252,7 @@ contract FileSolvers {
         // Checks
         Request memory request = requests[id];
         if (!request.isDone) revert RequestNotClosed();
-        if (request.returnReward) revert JustWithdraw();
+        if (request.returnReward) revert AlreadyWithdraw();
         if (request.filesCount > 0) revert HaveToChooseWinner();
         if (
             (keccak256(abi.encode(msg.sender)) !=
@@ -271,7 +269,7 @@ contract FileSolvers {
     }
 
     /**
-     * The author choose the winner for a closed request with partecipants
+     * The author choose the winner for a closed request with participants
      * (in case the author don't choose the winner, the owner will be chosen)
      * @param id - id of the request
      * @param file - file id of the winner
@@ -280,13 +278,13 @@ contract FileSolvers {
         // Request checks
         Request memory request = requests[id];
         if (!request.isDone) revert RequestNotClosed();
-        if (request.filesCount == 0) revert NoPartecipants();
+        if (request.filesCount == 0) revert NoParticipants();
         if (
             (keccak256(abi.encode(msg.sender)) !=
                 keccak256(abi.encode(request.author))) &&
             (keccak256(abi.encode(msg.sender)) != keccak256(abi.encode(owner)))
         ) revert YouAreNotTheAuthor();
-        if (request.winner != address(0)) revert JustHaveAWinner();
+        if (request.winner != address(0)) revert AlreadyHaveAWinner();
 
         // Check if file is inside request files
         if (file >= countFiles) revert FileNotFound();

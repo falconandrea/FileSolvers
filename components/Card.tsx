@@ -30,7 +30,7 @@ const Card = ({ demand }: CardProps) => {
         <br /> {returnETH(demand.reward)}
       </p>
       <p className="text-gray-600 mt-2">
-        <strong>Partecipants: </strong>
+        <strong>Participants: </strong>
         <br /> {Number(demand.filesCount)}
       </p>
       <Link

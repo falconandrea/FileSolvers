@@ -4,7 +4,7 @@ import {
   writeContract,
   waitForTransaction,
 } from "@wagmi/core";
-import { Demand, RequestFile } from "./interfaces-types";
+import { Demand, ParticipantFile, RequestFile } from "./interfaces-types";
 import fileSolvers from "../abi/FileSolvers.json";
 import { parseEther } from "viem";
 import { getTimestampFromDate } from "./helpers";
@@ -80,19 +80,21 @@ export const createRequest = async (
 };
 
 /**
- * Retrieves a request by its ID.
+ * Retrieves a demand and its associated request files by ID.
  *
- * @param {number} id - The ID of the demand to retrieve.
- * @return {Promise<Demand | null>} A Promise that resolves to the retrieved demand, or null if no demand was found.
+ * @param {number} id - The ID of the demand.
+ * @return {Promise<[Demand, ParticipantFile[]]>} A promise that resolves to an array containing the demand and its associated request files.
  */
-export const getRequest = async (id: number): Promise<Demand | null> => {
-  const data = (await readContract({
+export const getRequest = async (
+  id: number
+): Promise<[Demand, ParticipantFile[]]> => {
+  const [demand, files] = (await readContract({
     address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`,
     abi: fileSolvers.abi,
     functionName: "getRequest",
     args: [id],
-  })) as Demand;
-  return data || null;
+  })) as [Demand, ParticipantFile[]];
+  return [demand, files];
 };
 
 /**

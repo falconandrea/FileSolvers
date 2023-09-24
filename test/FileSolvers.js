@@ -200,7 +200,7 @@ describe("FileSolvers", function () {
             "Simple PDF",
             "abc123"
           )
-      ).to.be.revertedWithCustomError(contract, "YouCantPartecipate");
+      ).to.be.revertedWithCustomError(contract, "YouCantParticipate");
     });
 
     it("Shouldn't send a file without required fields", async function () {
@@ -275,7 +275,7 @@ describe("FileSolvers", function () {
             "Second PDF",
             "abc123123"
           )
-      ).to.be.revertedWithCustomError(contract, "JustPartecipated");
+      ).to.be.revertedWithCustomError(contract, "AlreadyParticipated");
     });
   });
 
@@ -391,7 +391,7 @@ describe("FileSolvers", function () {
       // Move 2 days in the future after the expiration date
       await helpers.time.increase(2 * 24 * 60 * 60);
 
-      // Close request without partecipants
+      // Close request without participants
       await contract.closeExpiredRequest();
 
       // Withdraw reward
@@ -434,7 +434,7 @@ describe("FileSolvers", function () {
       // Move 2 days in the future after the expiration date
       await helpers.time.increase(2 * 24 * 60 * 60);
 
-      // Close request without partecipants
+      // Close request without participants
       await contract.closeExpiredRequest();
 
       // Withdraw reward
@@ -469,7 +469,7 @@ describe("FileSolvers", function () {
       // Move 2 days in the future after the expiration date
       await helpers.time.increase(2 * 24 * 60 * 60);
 
-      // Close request without partecipants
+      // Close request without participants
       await contract.closeExpiredRequest();
 
       // Withdraw reward
@@ -479,7 +479,7 @@ describe("FileSolvers", function () {
       // Revert Withdraw reward
       await expect(
         contract.withdrawReward(request[0])
-      ).to.be.revertedWithCustomError(contract, "JustWithdraw");
+      ).to.be.revertedWithCustomError(contract, "AlreadyWithdraw");
     });
     it("Shouldn't withdraw reward from a active request", async function () {
       const { contract, owner, account1, account2 } = await loadFixture(
@@ -494,7 +494,7 @@ describe("FileSolvers", function () {
         contract.withdrawReward(request[0])
       ).to.be.revertedWithCustomError(contract, "RequestNotClosed");
     });
-    it("Shouldn't withdraw reward from a request with partecipants", async function () {
+    it("Shouldn't withdraw reward from a request with participants", async function () {
       const { contract, owner, account1, account2 } = await loadFixture(
         deployFixture
       );
@@ -574,10 +574,10 @@ describe("FileSolvers", function () {
       // Move 2 days in the future after the expiration date
       await helpers.time.increase(2 * 24 * 60 * 60);
 
-      // Close request without partecipants
+      // Close request without participants
       await contract.closeExpiredRequest();
 
-      // Choose a partecipant
+      // Choose a participant
       const tx = await contract.connect(owner).chooseWinner(request[0], 0);
       expect(tx).to.be.not.reverted;
 
@@ -628,10 +628,10 @@ describe("FileSolvers", function () {
       // Move 2 days in the future after the expiration date
       await helpers.time.increase(2 * 24 * 60 * 60);
 
-      // Close request without partecipants
+      // Close request without participants
       await contract.closeExpiredRequest();
 
-      // Choose a partecipant
+      // Choose a participant
       const tx = await contract.connect(owner).chooseWinner(request[0], 0);
       expect(tx).to.be.not.reverted;
 
@@ -652,10 +652,10 @@ describe("FileSolvers", function () {
         balanceUserBefore + hre.ethers.parseEther("0.09")
       );
 
-      // Choose a partecipant
+      // Choose a participant
       await expect(
         contract.connect(owner).chooseWinner(request[0], 0)
-      ).to.be.revertedWithCustomError(contract, "JustHaveAWinner");
+      ).to.be.revertedWithCustomError(contract, "AlreadyHaveAWinner");
 
       const balanceUserAfter2 = await hre.ethers.provider.getBalance(
         account1.address
@@ -686,15 +686,15 @@ describe("FileSolvers", function () {
       // Move 2 days in the future after the expiration date
       await helpers.time.increase(2 * 24 * 60 * 60);
 
-      // Close request without partecipants
+      // Close request without participants
       await contract.closeExpiredRequest();
 
-      // Account 2 try to choose a partecipant -> fail
+      // Account 2 try to Choose a participant -> fail
       await expect(
         contract.connect(account2).chooseWinner(request[0], 0)
       ).to.be.revertedWithCustomError(contract, "YouAreNotTheAuthor");
 
-      // The owner can choose a partecipant
+      // The owner can Choose a participant
       const tx = await contract.connect(owner).chooseWinner(request[0], 0);
       expect(tx).to.be.not.reverted;
     });
@@ -722,7 +722,7 @@ describe("FileSolvers", function () {
         contract.connect(account2).chooseWinner(request[0], 0)
       ).to.be.revertedWithCustomError(contract, "RequestNotClosed");
     });
-    it("Shouldn't choose a winner if there are no partecipants", async function () {
+    it("Shouldn't choose a winner if there are no participants", async function () {
       const { contract, owner, account1, account2 } = await loadFixture(
         deployFixture
       );
@@ -733,13 +733,13 @@ describe("FileSolvers", function () {
       // Move 2 days in the future after the expiration date
       await helpers.time.increase(2 * 24 * 60 * 60);
 
-      // Close request without partecipants
+      // Close request without participants
       await contract.closeExpiredRequest();
 
       // Try to choose a winner
       await expect(
         contract.connect(account1).chooseWinner(request[0], 0)
-      ).to.be.revertedWithCustomError(contract, "NoPartecipants");
+      ).to.be.revertedWithCustomError(contract, "NoParticipants");
     });
     it("Shouldn't choose a winner with a wrong file", async function () {
       const { contract, owner, account1, account2 } = await loadFixture(
@@ -763,7 +763,7 @@ describe("FileSolvers", function () {
       // Move 2 days in the future after the expiration date
       await helpers.time.increase(2 * 24 * 60 * 60);
 
-      // Close request without partecipants
+      // Close request without participants
       await contract.closeExpiredRequest();
 
       // Try to choose a wrong file
