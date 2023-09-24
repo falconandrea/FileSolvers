@@ -99,32 +99,6 @@ describe("FileSolvers", function () {
           )
       ).to.be.revertedWithCustomError(contract, "MissingParams");
 
-      // With a wrong amount
-      await expect(
-        contract
-          .connect(owner)
-          .createRequest(
-            "Simple description",
-            ["pdf", "doc", "docx"],
-            Math.floor(Date.now() / 1000) + 2000,
-            {
-              value: hre.ethers.parseEther("0"),
-            }
-          )
-      ).to.be.revertedWithCustomError(contract, "AmountLessThanZero");
-
-      // With a wrong timestamp
-      await expect(
-        contract.connect(owner).createRequest(
-          "Simple description",
-          ["pdf", "doc", "docx"],
-          Math.floor((Date.now() - 86400000) / 1000), // yesterday
-          {
-            value: hre.ethers.parseEther("0.2"),
-          }
-        )
-      ).to.be.revertedWithCustomError(contract, "WrongExpirationDate");
-
       // Without file types
       await expect(
         contract
@@ -138,12 +112,44 @@ describe("FileSolvers", function () {
             }
           )
       ).to.be.revertedWithCustomError(contract, "MissingParams");
-
-      // Cannot get wrong request
-      await expect(contract.getRequest(1)).to.be.revertedWithCustomError(
-        contract,
-        "RequestNotFound"
+    });
+    it("Shouldn't create new request with a wrong expiration date", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
       );
+
+      // With a wrong expiration date
+      await expect(
+        contract
+          .connect(owner)
+          .createRequest(
+            "Test",
+            ["pdf", "doc", "docx"],
+            Math.floor(Date.now() / 1000) - 2000,
+            {
+              value: hre.ethers.parseEther("0.1"),
+            }
+          )
+      ).to.be.revertedWithCustomError(contract, "WrongExpirationDate");
+    });
+    it("Shouldn't create new request with a wrong amount", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // With a wrong amount
+      await expect(
+        contract
+          .connect(owner)
+          .createRequest(
+            "Simple description",
+            ["pdf", "doc", "docx"],
+            Math.floor(Date.now() / 1000) + 2000,
+            {
+              value: hre.ethers.parseEther("0"),
+            }
+          )
+      ).to.be.revertedWithCustomError(contract, "AmountLessThanZero");
     });
   });
 
@@ -517,7 +523,6 @@ describe("FileSolvers", function () {
         contract.withdrawReward(request[0])
       ).to.be.revertedWithCustomError(contract, "HaveToChooseWinner");
     });
-
     it("Shouldn't withdraw reward from a not yours request", async function () {
       const { contract, owner, account1, account2 } = await loadFixture(
         deployFixture
@@ -537,5 +542,234 @@ describe("FileSolvers", function () {
       ).to.be.revertedWithCustomError(contract, "YouAreNotTheAuthor");
     });
   });
-  describe("Choose a winner", function () {});
+
+  describe("Choose a winner", function () {
+    it("Should choose a winner and send reward", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // Create new request
+      const [request] = await createSimpleRequest(contract, owner);
+
+      // Send file
+      await contract
+        .connect(account1)
+        .sendFileToRequest(
+          request[0],
+          "test.pdf",
+          "pdf",
+          "Simple PDF",
+          "abc123"
+        );
+
+      // Get contract balance and user balance before closing
+      const balanceContractBefore = await hre.ethers.provider.getBalance(
+        contract.target
+      );
+      const balanceUserBefore = await hre.ethers.provider.getBalance(
+        account1.address
+      );
+
+      // Move 2 days in the future after the expiration date
+      await helpers.time.increase(2 * 24 * 60 * 60);
+
+      // Close request without partecipants
+      await contract.closeExpiredRequest();
+
+      // Choose a partecipant
+      const tx = await contract.connect(owner).chooseWinner(request[0], 0);
+      expect(tx).to.be.not.reverted;
+
+      // Get contract balance and user balance before closing
+      const balanceContractAfter = await hre.ethers.provider.getBalance(
+        contract.target
+      );
+      const balanceUserAfter = await hre.ethers.provider.getBalance(
+        account1.address
+      );
+
+      // Check balances
+      expect(balanceContractAfter).to.be.equal(
+        balanceContractBefore - hre.ethers.parseEther("0.1")
+      );
+
+      expect(balanceUserAfter).to.be.greaterThan(
+        balanceUserBefore + hre.ethers.parseEther("0.09")
+      );
+    });
+    it("Shouldn't choose a winner twice", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // Create new request
+      const [request] = await createSimpleRequest(contract, owner);
+
+      // Send file
+      await contract
+        .connect(account1)
+        .sendFileToRequest(
+          request[0],
+          "test.pdf",
+          "pdf",
+          "Simple PDF",
+          "abc123"
+        );
+
+      // Get contract balance and user balance before closing
+      const balanceContractBefore = await hre.ethers.provider.getBalance(
+        contract.target
+      );
+      const balanceUserBefore = await hre.ethers.provider.getBalance(
+        account1.address
+      );
+
+      // Move 2 days in the future after the expiration date
+      await helpers.time.increase(2 * 24 * 60 * 60);
+
+      // Close request without partecipants
+      await contract.closeExpiredRequest();
+
+      // Choose a partecipant
+      const tx = await contract.connect(owner).chooseWinner(request[0], 0);
+      expect(tx).to.be.not.reverted;
+
+      // Get contract balance and user balance before closing
+      const balanceContractAfter = await hre.ethers.provider.getBalance(
+        contract.target
+      );
+      const balanceUserAfter = await hre.ethers.provider.getBalance(
+        account1.address
+      );
+
+      // Check balances
+      expect(balanceContractAfter).to.be.equal(
+        balanceContractBefore - hre.ethers.parseEther("0.1")
+      );
+
+      expect(balanceUserAfter).to.be.greaterThan(
+        balanceUserBefore + hre.ethers.parseEther("0.09")
+      );
+
+      // Choose a partecipant
+      await expect(
+        contract.connect(owner).chooseWinner(request[0], 0)
+      ).to.be.revertedWithCustomError(contract, "JustHaveAWinner");
+
+      const balanceUserAfter2 = await hre.ethers.provider.getBalance(
+        account1.address
+      );
+
+      // User balance don't change
+      expect(balanceUserAfter).to.be.equal(balanceUserAfter2);
+    });
+    it("Should choose a winner only the author or the owner", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // Create new request
+      const [request] = await createSimpleRequest(contract, account1);
+
+      // Send file
+      await contract
+        .connect(account2)
+        .sendFileToRequest(
+          request[0],
+          "test.pdf",
+          "pdf",
+          "Simple PDF",
+          "abc123"
+        );
+
+      // Move 2 days in the future after the expiration date
+      await helpers.time.increase(2 * 24 * 60 * 60);
+
+      // Close request without partecipants
+      await contract.closeExpiredRequest();
+
+      // Account 2 try to choose a partecipant -> fail
+      await expect(
+        contract.connect(account2).chooseWinner(request[0], 0)
+      ).to.be.revertedWithCustomError(contract, "YouAreNotTheAuthor");
+
+      // The owner can choose a partecipant
+      const tx = await contract.connect(owner).chooseWinner(request[0], 0);
+      expect(tx).to.be.not.reverted;
+    });
+    it("Shouldn't choose a winner if the request is active", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // Create new request
+      const [request] = await createSimpleRequest(contract, account1);
+
+      // Send file
+      await contract
+        .connect(account2)
+        .sendFileToRequest(
+          request[0],
+          "test.pdf",
+          "pdf",
+          "Simple PDF",
+          "abc123"
+        );
+
+      // Try to choose a winner
+      await expect(
+        contract.connect(account2).chooseWinner(request[0], 0)
+      ).to.be.revertedWithCustomError(contract, "RequestNotClosed");
+    });
+    it("Shouldn't choose a winner if there are no partecipants", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // Create new request
+      const [request] = await createSimpleRequest(contract, account1);
+
+      // Move 2 days in the future after the expiration date
+      await helpers.time.increase(2 * 24 * 60 * 60);
+
+      // Close request without partecipants
+      await contract.closeExpiredRequest();
+
+      // Try to choose a winner
+      await expect(
+        contract.connect(account1).chooseWinner(request[0], 0)
+      ).to.be.revertedWithCustomError(contract, "NoPartecipants");
+    });
+    it("Shouldn't choose a winner with a wrong file", async function () {
+      const { contract, owner, account1, account2 } = await loadFixture(
+        deployFixture
+      );
+
+      // Create new request
+      const [request] = await createSimpleRequest(contract, account1);
+
+      // Send file
+      await contract
+        .connect(account2)
+        .sendFileToRequest(
+          request[0],
+          "test.pdf",
+          "pdf",
+          "Simple PDF",
+          "abc123"
+        );
+
+      // Move 2 days in the future after the expiration date
+      await helpers.time.increase(2 * 24 * 60 * 60);
+
+      // Close request without partecipants
+      await contract.closeExpiredRequest();
+
+      // Try to choose a wrong file
+      await expect(
+        contract.connect(account1).chooseWinner(request[0], 1)
+      ).to.be.revertedWithCustomError(contract, "FileNotFound");
+    });
+  });
 });
