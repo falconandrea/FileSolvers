@@ -5,7 +5,13 @@ import Layout from "@/components/Layout";
 import { NextPageWithLayout } from "@/pages/_app";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAccount, useNetwork } from "wagmi";
-import { getRequest, sendFileToRequest, uploadFile } from "@/utils/functions";
+import {
+  chooseTheWinner,
+  getRequest,
+  sendFileToRequest,
+  uploadFile,
+  withdrawReward,
+} from "@/utils/functions";
 import {
   checkFormatIsAccepted,
   formatTimestamp,
@@ -38,7 +44,6 @@ const Detail: NextPageWithLayout = () => {
   const [requestId, setRequestId] = useState<number>(-1);
   const router = useRouter();
 
-  const [isTheAuthor, setIsTheAuthor] = useState<boolean>(false);
   const [alreadyParticipated, setAlreadyParticipated] =
     useState<boolean>(false);
 
@@ -53,11 +58,6 @@ const Detail: NextPageWithLayout = () => {
       const [demand, files]: [Demand, ParticipantFile[]] = await getRequest(id);
       setDemand(demand);
       setFiles(files);
-      if (demand.author === address) {
-        setIsTheAuthor(true);
-      } else {
-        setIsTheAuthor(false);
-      }
 
       // Check if user had already submitted a file
       let canParticipate = true;
@@ -68,6 +68,41 @@ const Detail: NextPageWithLayout = () => {
       }
       if (canParticipate) setAlreadyParticipated(false);
       else setAlreadyParticipated(true);
+    } catch (error: any) {
+      setMessageStatus("error");
+      setMessageAlert(parseErrors(error.toString()));
+    }
+  };
+
+  /**
+   * Chooses the winner based on the fileId.
+   *
+   * @param {number} fileId - The id of the file.
+   * @return {Promise<void>} - A promise that resolves when the winner is chosen.
+   */
+  const chooseWinner = async (fileId: number) => {
+    try {
+      const { result, hash } = await chooseTheWinner(requestId, fileId);
+      setHash(hash);
+      setMessageStatus("success");
+      setMessageAlert("Winner chosen");
+    } catch (error: any) {
+      setMessageStatus("error");
+      setMessageAlert(parseErrors(error.toString()));
+    }
+  };
+
+  /**
+   * Takes back the reward.
+   *
+   * @return {Promise<void>} Nothing is returned.
+   */
+  const takeBackTheReward = async () => {
+    try {
+      const { result, hash } = await withdrawReward(requestId);
+      setHash(hash);
+      setMessageStatus("success");
+      setMessageAlert("Reward withdrawn");
     } catch (error: any) {
       setMessageStatus("error");
       setMessageAlert(parseErrors(error.toString()));
@@ -194,9 +229,10 @@ const Detail: NextPageWithLayout = () => {
 
       <div className="py-8 px-4 max-w-xl mx-auto">
         <div className="bg-slate-100 p-4 border rounded py-8">
-          {showForm ? (
+          {showForm && demand ? (
             <div className="px-4 max-w-xl mx-auto">
-              {!isTheAuthor && !alreadyParticipated && (
+              {/* You are not the author and you have not participated */}
+              {demand.author !== address && !alreadyParticipated && (
                 <form
                   onSubmit={handleSubmit}
                   method="POST"
@@ -216,7 +252,7 @@ const Detail: NextPageWithLayout = () => {
                   </div>
                   <div className="mb-4">
                     <label className="block text-gray-600">
-                      File (accepted formats:
+                      File (accepted formats:{" "}
                       {demand?.formatsAccepted.join(", ")}) - Max 10MB
                     </label>
                     <input
@@ -234,20 +270,103 @@ const Detail: NextPageWithLayout = () => {
                   <TransactionLink hash={hash} />
                 </form>
               )}
-              {isTheAuthor && (
+
+              {/* You are the author and the request is not expired */}
+              {demand.author === address && !demand.isDone && (
                 <p className="text-center text-gray-600">
-                  You are the author, you cannot upload a file
+                  You are the author, you cannot upload a file. <br />
+                  When the request expires, you will be able to choose the
+                  winner or take back the amount paid if no one participated.
                 </p>
               )}
+
+              {/* You are the author, the request is expired but there aren't any participants */}
+              {demand.author === address &&
+                demand.isDone &&
+                files.length == 0 && (
+                  <div>
+                    <h4 className="text-xl font-semibold mb-4">
+                      Take back the amount
+                    </h4>
+                    <p className="text-gray-600">
+                      Unfortunately, there are no participants. Click here to
+                      take back your amount.
+                    </p>
+                    <button
+                      onClick={() => takeBackTheReward()}
+                      className="bg-blue-500 mt-2 text-white px-2 py-1 text-sm rounded hover:bg-blue-600"
+                    >
+                      Take back
+                    </button>
+                    <TransactionLink hash={hash} />
+                  </div>
+                )}
+
+              {/* You are the author, the request is expired and you have not chosen the winner */}
+              {demand.author === address && demand.isDone && !demand.winner && (
+                <div>
+                  <h4 className="text-xl font-semibold mb-4">
+                    Choose the winner
+                  </h4>
+                  <p className="text-gray-600">
+                    Here you have all the files of the participants, you have to
+                    choose the winner!
+                  </p>
+                  {files.length > 0 ? (
+                    <div>
+                      {files.map((file) => (
+                        <div className="border border-gray-500 p-2 mt-4">
+                          <p>
+                            <strong>Filename: </strong>
+                            <a
+                              href={`https://gateway.lighthouse.storage/ipfs/${file.cid}`}
+                              title=""
+                              className="underline"
+                              target="_blank"
+                            >
+                              {file.fileName}
+                            </a>
+                          </p>
+                          <p>
+                            <strong>Description: </strong>
+                            {file.description}
+                          </p>
+                          <p>
+                            <strong>Format: </strong>
+                            {file.format}
+                          </p>
+                          <p>
+                            <strong>Author: </strong>
+                            <PrintAddress address={file.author}></PrintAddress>
+                          </p>
+                          <button
+                            onClick={() => chooseWinner(Number(file.id))}
+                            className="bg-blue-500 mt-2 text-white px-2 py-1 text-sm rounded hover:bg-blue-600"
+                          >
+                            Choose this
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-center text-gray-600 mt-4">
+                      There are not participants.
+                    </p>
+                  )}
+                  <TransactionLink hash={hash} />
+                </div>
+              )}
+
+              {/* You are not the author and you have already participated */}
               {alreadyParticipated && (
                 <p className="text-center text-gray-600">
-                  You have already participated in this request
+                  You have already participated in this request.
                 </p>
               )}
             </div>
           ) : (
             <p className="text-center text-gray-600">
-              You have to be logged to upload a file
+              You have to be logged to upload a file.
             </p>
           )}
         </div>

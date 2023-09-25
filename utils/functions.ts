@@ -119,9 +119,6 @@ export const uploadFile = async (file: File): Promise<any> => {
     false,
     dealParam
   );
-  console.log(
-    "Visit at: https://gateway.lighthouse.storage/ipfs/" + response.data.Hash
-  );
   return response.data.Hash;
 };
 
@@ -143,6 +140,48 @@ export const sendFileToRequest = async (
     abi: fileSolvers.abi,
     functionName: "sendFileToRequest",
     args: [id, file.fileName, file.format, description, file.cid],
+  });
+  const { hash } = await writeContract(config);
+  const result = await waitForTransaction({
+    hash,
+  });
+  return { result, hash };
+};
+
+/**
+ * A function that chooses the winner based on the provided request id and file number.
+ *
+ * @param {number} id - The id of the winner.
+ * @param {number} file - The file number.
+ * @return {Promise<{ result: any, hash: string }>} An object containing the result and hash of the transaction.
+ */
+export const chooseTheWinner = async (id: number, file: number) => {
+  const config = await prepareWriteContract({
+    address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`,
+    abi: fileSolvers.abi,
+    functionName: "chooseWinner",
+    args: [id, file],
+  });
+  const { hash } = await writeContract(config);
+  const result = await waitForTransaction({
+    hash,
+  });
+  return { result, hash };
+};
+
+/**
+ * A function that chooses the winner based on the provided request id and file number.
+ *
+ * @param {number} id - The id of the winner.
+ * @param {number} file - The file number.
+ * @return {Promise<{ result: any, hash: string }>} An object containing the result and hash of the transaction.
+ */
+export const withdrawReward = async (id: number) => {
+  const config = await prepareWriteContract({
+    address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`,
+    abi: fileSolvers.abi,
+    functionName: "withdrawReward",
+    args: [id],
   });
   const { hash } = await writeContract(config);
   const result = await waitForTransaction({
