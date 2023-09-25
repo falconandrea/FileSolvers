@@ -14,7 +14,7 @@ export const acceptedFormats = [
   "flv",
   "webm",
 ];
-export const mappingFormats = {
+export const mappingFormats: Record<string, string> = {
   "application/pdf": "pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
     "docx",
