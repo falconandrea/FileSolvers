@@ -306,4 +306,8 @@ contract FileSolvers {
         bool result = payable(winner).send(request.reward);
         require(result, "Send reward failed");
     }
+
+    fallback() external payable {}
+
+    receive() external payable {}
 }
