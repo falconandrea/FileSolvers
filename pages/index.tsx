@@ -8,8 +8,11 @@ import { Demand } from "@/utils/interfaces-types";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { getRequests } from "@/utils/functions";
 import Link from "next/link";
+import { useAccount } from "wagmi";
 
 const Home: NextPageWithLayout = () => {
+  const { address } = useAccount();
+
   const [demands, setDemands] = useState<Demand[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -17,9 +20,8 @@ const Home: NextPageWithLayout = () => {
     setIsLoading(true);
 
     const fetchData = async () => {
-      const data = await getRequests("all", "DESC", false, 3);
+      const data = await getRequests(address, "all", "DESC", false, 3);
       setDemands(data);
-      console.log(data);
       setIsLoading(false);
     };
 

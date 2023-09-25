@@ -7,8 +7,11 @@ import Card from "@/components/Card";
 import { Demand } from "@/utils/interfaces-types";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { getRequests } from "@/utils/functions";
+import { useAccount } from "wagmi";
 
 const Requests: NextPageWithLayout = () => {
+  const { address } = useAccount();
+
   const [demands, setDemands] = useState<Demand[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState<string>("all");
@@ -19,14 +22,13 @@ const Requests: NextPageWithLayout = () => {
     const fetchData = async () => {
       let data;
       if (filter == "mine") {
-        data = await getRequests("mine", "DESC", true);
+        data = await getRequests(address, "mine", "DESC", true);
       } else if (filter == "active") {
-        data = await getRequests("all", "DESC", false);
+        data = await getRequests(address, "all", "DESC", false);
       } else {
-        data = await getRequests("all", "DESC", true);
+        data = await getRequests(address, "all", "DESC", true);
       }
       setDemands(data);
-      console.log(data);
       setIsLoading(false);
     };
 

@@ -14,12 +14,14 @@ const lighthouse = require("@lighthouse-web3/sdk");
 /**
  * Retrieves all the demands
  *
+ * @param {string} account - The account sender.
  * @param {string} sortOrder - The order in which the demands should be sorted. Default is "ASC".
  * @param {boolean} withCompleted - Whether to include completed demands in the result. Default is true.
  * @param {number} limit - The maximum number of demands to retrieve. Default is 0 (retrieve all).
  * @return {Demand[] | null} An array of demands or null if no demands are found.
  */
 export const getRequests = async (
+  account: `0x${string}` | undefined,
   filter: string,
   sortOrder: "ASC" | "DESC" = "ASC",
   withCompleted: boolean = true,
@@ -30,6 +32,7 @@ export const getRequests = async (
     abi: fileSolvers.abi,
     functionName: filter == "mine" ? "getMyRequests" : "getRequests",
     args: [],
+    account,
   })) as Demand[];
 
   // Filter data by isDone
