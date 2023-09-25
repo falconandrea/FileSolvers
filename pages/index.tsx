@@ -26,7 +26,7 @@ const Home: NextPageWithLayout = () => {
     };
 
     fetchData();
-  }, []);
+  }, [address]);
 
   return (
     <main className="container mx-auto">

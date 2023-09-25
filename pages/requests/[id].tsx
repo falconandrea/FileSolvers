@@ -118,7 +118,7 @@ const Detail: NextPageWithLayout = () => {
       getRequestData(id);
       setIsLoading(false);
     }
-  }, [router.isReady, address]);
+  }, [router.isReady, address, router.query.id]);
 
   useEffect(() => {
     setShowForm(isConnected && chain && chain.name == "Sepolia" ? true : false);
@@ -314,8 +314,11 @@ const Detail: NextPageWithLayout = () => {
                   </p>
                   {files.length > 0 ? (
                     <div>
-                      {files.map((file) => (
-                        <div className="border border-gray-500 p-2 mt-4">
+                      {files.map((file, index) => (
+                        <div
+                          className="border border-gray-500 p-2 mt-4"
+                          key={index}
+                        >
                           <p>
                             <strong>Filename: </strong>
                             <a

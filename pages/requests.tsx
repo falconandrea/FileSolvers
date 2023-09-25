@@ -33,7 +33,7 @@ const Requests: NextPageWithLayout = () => {
     };
 
     fetchData();
-  }, [filter]);
+  }, [filter, address]);
 
   return (
     <main className="container mx-auto">
