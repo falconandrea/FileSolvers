@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { CardProps } from "@/utils/interfaces-types";
 import { formatTimestamp, returnETH, truncateString } from "@/utils/helpers";
+import { zeroAddress } from "viem";
+import PrintAddress from "./PrintAddress";
 
 /**
  * Renders a card component for a given demand.
@@ -33,6 +35,21 @@ const Card = ({ demand }: CardProps) => {
         <strong>Participants: </strong>
         <br /> {Number(demand.filesCount)}
       </p>
+      <p className="text-gray-600 mt-2">
+        <strong>Status: </strong>
+        <br /> {demand.isDone ? "Expired" : "Active"}
+      </p>
+      {demand.isDone && (
+        <p className="text-gray-600 mt-2">
+          <strong>Winner: </strong>
+          <br />{" "}
+          {demand.winner != zeroAddress ? (
+            <PrintAddress address={demand.winner}></PrintAddress>
+          ) : (
+            "-"
+          )}
+        </p>
+      )}
       <Link
         href={`/requests/${demand.id}`}
         className="mt-4 inline-block bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
