@@ -52,9 +52,21 @@ I proud to have contributed to the Open Data Hack and used cutting-edge technolo
 To get started with FileSolvers locally, follow these steps:
 
 1. Clone this repository to your local machine.
+```shell
+git clone https://github.com/falconandrea/FileSolvers.git
+````
 2. Copy `.env.example` file to `.env` file in the root directory with the required environment variables.
+```shell
+cp .env.example .env
+```
 3. Install project dependencies using npm command `npm install`.
+```shell
+npm install
+```
 4. Start the development server with `npm run dev`.
+```shell
+npm run dev
+```
 5. Access the application at [http://localhost:3000](http://localhost:3000).
 
 ## Disclaimer
